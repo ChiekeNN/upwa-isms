@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -67,15 +69,20 @@ export default function LoginPage() {
             required
           />
           <label className="block text-sm font-medium text-slate-700" htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="-mt-3 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-upwa-blue-500 focus:ring-2 focus:ring-upwa-blue-100"
-            required
-          />
+          <div className="-mt-3 flex w-full rounded-xl border border-slate-300 focus-within:border-upwa-blue-500 focus-within:ring-2 focus-within:ring-upwa-blue-100">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="min-w-0 flex-1 rounded-l-xl px-4 py-3 text-sm outline-none"
+              required
+            />
+            <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} className="rounded-r-xl px-3 text-slate-500 hover:bg-slate-50 hover:text-upwa-navy focus:outline-none focus:ring-2 focus:ring-inset focus:ring-upwa-blue-500">
+              {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+            </button>
+          </div>
           <button disabled={!configured || busy} className="w-full rounded-xl bg-upwa-blue-700 px-4 py-3 font-semibold text-white transition hover:bg-upwa-blue-800 disabled:cursor-not-allowed disabled:opacity-50">
             {busy ? "Signing in…" : "Sign in"}
           </button>
