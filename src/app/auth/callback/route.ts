@@ -9,5 +9,7 @@ export async function GET(request: NextRequest) {
   }
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase.auth.exchangeCodeForSession(code);
-  return NextResponse.redirect(new URL(error ? "/login?error=sign-in" : "/portal", request.url));
+  const next = request.nextUrl.searchParams.get("next");
+  const destination = next === "/reset-password" ? "/reset-password" : "/portal";
+  return NextResponse.redirect(new URL(error ? "/login?error=sign-in" : destination, request.url));
 }
