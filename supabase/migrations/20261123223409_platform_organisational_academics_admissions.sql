@@ -503,7 +503,7 @@ BEGIN
     RAISE EXCEPTION 'Invalid gender value';
   END IF;
 
-  v_duplicate_hash := encode(digest(
+  v_duplicate_hash := encode(extensions.digest(
     v_cycle.id::text || '|' || lower(trim(p_first_name)) || '|' || lower(trim(p_last_name)) || '|' ||
     p_date_of_birth::text || '|' || regexp_replace(p_guardian_phone, '[^0-9]', '', 'g'),
     'sha256'), 'hex');
@@ -518,7 +518,7 @@ BEGIN
     trim(p_first_name), nullif(trim(p_middle_name), ''), trim(p_last_name), p_date_of_birth,
     p_gender, trim(p_guardian_name), nullif(lower(trim(p_guardian_email)), ''),
     trim(p_guardian_phone), v_cycle.application_fee_amount, v_cycle.entrance_exam_at,
-    v_cycle.exam_venue, encode(digest(p_tracking_token, 'sha256'), 'hex'), v_duplicate_hash
+    v_cycle.exam_venue, encode(extensions.digest(p_tracking_token, 'sha256'), 'hex'), v_duplicate_hash
   ) RETURNING admission_applications.application_number INTO v_application_number;
 
   RETURN QUERY SELECT v_application_number, 'SUBMITTED'::TEXT, v_cycle.application_fee_amount,
@@ -845,7 +845,7 @@ SET search_path = public, auth
 AS $$
   SELECT a.application_number, a.status, a.exam_at, a.exam_venue, a.updated_at
   FROM admission_applications a
-  WHERE a.tracking_token_hash = encode(digest(p_token, 'sha256'), 'hex')
+  WHERE a.tracking_token_hash = encode(extensions.digest(p_token, 'sha256'), 'hex')
   LIMIT 1;
 $$;
 REVOKE ALL ON FUNCTION upwa_track_application(TEXT) FROM PUBLIC;

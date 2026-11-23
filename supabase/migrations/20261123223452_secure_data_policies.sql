@@ -239,7 +239,7 @@ SET search_path = public, auth
 AS $$
   SELECT a.id, a.status
   FROM admission_applications a
-  WHERE a.tracking_token_hash = encode(digest(p_token, 'sha256'), 'hex')
+  WHERE a.tracking_token_hash = encode(extensions.digest(p_token, 'sha256'), 'hex')
     AND a.status IN ('SUBMITTED','UNDER_REVIEW','EXAM_SCHEDULED')
   LIMIT 1;
 $$;
@@ -253,7 +253,7 @@ AS $$
 DECLARE v_application admission_applications%ROWTYPE; v_document_id UUID;
 BEGIN
   SELECT * INTO v_application FROM admission_applications a
-  WHERE a.tracking_token_hash = encode(digest(p_token, 'sha256'), 'hex')
+  WHERE a.tracking_token_hash = encode(extensions.digest(p_token, 'sha256'), 'hex')
     AND a.status IN ('SUBMITTED','UNDER_REVIEW','EXAM_SCHEDULED')
   FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Application token is invalid or the upload window is closed'; END IF;
