@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { ExecutiveConsole, FinanceWorkspace, ResultsCentre, ScoresWorkspace } from "./advanced-workspaces";
 
 type Division = { id: string; code: string; name: string };
 type Role = { code: string; label: string; divisionId: string | null };
@@ -25,10 +26,14 @@ type Attendance = { id: string; student_id: string; attendance_date: string; sta
 type Application = { id: string; application_number: string; applicant_first_name: string; applicant_middle_name: string | null; applicant_last_name: string; guardian_name: string; guardian_email: string | null; guardian_phone: string; status: string; created_at: string; exam_at: string | null };
 type ContentEntry = { id: string; content_type: string; division_id: string | null; slug: string; title: string; summary: string | null; status: string; is_placeholder: boolean };
 type StaffMember = { id: string; staff_number: string; full_name: string; position_title: string | null; employment_status: string; subjects: string[] };
-type View = "overview" | "students" | "staff" | "attendance" | "admissions" | "website";
+type View = "overview" | "executive" | "scores" | "results" | "finance" | "students" | "staff" | "attendance" | "admissions" | "website";
 
 const VIEW_PERMISSION: Record<View, string[]> = {
   overview: ["executive.read", "academics.read", "finance.read", "admissions.manage", "parent.read", "student.read", "care.manage", "pickup.manage"],
+  executive: ["executive.read"],
+  scores: ["academics.read", "results.review"],
+  results: ["results.read", "academics.read", "parent.read", "student.read"],
+  finance: ["finance.read", "finance.manage"],
   students: ["academics.read", "registry.manage", "admissions.manage", "parent.read", "student.read"],
   staff: ["registry.manage"],
   attendance: ["academics.read", "academics.manage", "parent.read", "student.read"],
@@ -100,9 +105,13 @@ export default function PortalWorkspace() {
   }, [division, me, visibleViews]);
 
   const loadModuleData = useCallback(async () => {
-    if (!me || !visibleViews.includes(view) || view === "overview") return;
+    if (!me || !visibleViews.includes(view) || view === "overview" || view === "executive" || view === "scores" || view === "results" || view === "finance") return;
     setError("");
     const endpoint: Record<Exclude<View, "overview">, string> = {
+      executive: "/api/portal/executive",
+      scores: "/api/portal/scores",
+      results: "/api/portal/results",
+      finance: "/api/portal/finance",
       students: "/api/portal/students",
       staff: "/api/portal/staff",
       attendance: "/api/portal/attendance",
@@ -230,7 +239,7 @@ export default function PortalWorkspace() {
           {me.roles.length === 0 && <span className="rounded-full bg-upwa-orange-100 px-3 py-1 text-xs font-semibold text-upwa-orange-900">Role assignment pending</span>}
         </div>
         <nav aria-label="Portal modules" className="mb-6 flex gap-2 overflow-x-auto pb-1">
-          {visibleViews.map((item) => <button key={item} onClick={() => { setView(item); setError(""); }} className={`rounded-xl border px-4 py-2.5 text-sm font-semibold capitalize whitespace-nowrap ${view === item ? "border-upwa-blue-700 bg-upwa-blue-700 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-upwa-blue-50"}`}>{item === "overview" ? "Overview" : item === "website" ? "Website CMS" : item}</button>)}
+          {visibleViews.map((item) => <button key={item} onClick={() => { setView(item); setError(""); }} className={`rounded-xl border px-4 py-2.5 text-sm font-semibold capitalize whitespace-nowrap ${view === item ? "border-upwa-blue-700 bg-upwa-blue-700 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-upwa-blue-50"}`}>{item === "overview" ? "Overview" : item === "executive" ? "Command Console" : item === "scores" ? "Scores & Broadsheet" : item === "results" ? "Results Centre" : item === "finance" ? "Finance" : item === "website" ? "Website CMS" : item}</button>)}
         </nav>
 
         {error && <div role="alert" className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{error}</div>}
@@ -248,6 +257,14 @@ export default function PortalWorkspace() {
           </section>
         ) : view === "overview" ? (
           <Overview summary={summary} permissions={permissions} division={division} />
+        ) : view === "executive" ? (
+          <ExecutiveConsole division={division} />
+        ) : view === "scores" ? (
+          <ScoresWorkspace division={division} permissions={permissions} />
+        ) : view === "results" ? (
+          <ResultsCentre division={division} canIssue={permissions.includes("results.publish")} />
+        ) : view === "finance" ? (
+          <FinanceWorkspace division={division} permissions={permissions} />
         ) : view === "students" ? (
           <StudentList students={students} classes={classes} division={division} canCreate={permissions.includes("registry.manage") && division !== "ALL"} onCreated={loadModuleData} />
         ) : view === "staff" ? (

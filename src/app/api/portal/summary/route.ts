@@ -49,21 +49,9 @@ export async function GET(request: NextRequest) {
 
   let finance: { billed: number; collected: number; outstanding: number } | null = null;
   if (access.permissions.includes("finance.read")) {
-    let invoiceQuery = access.supabase.from("invoices").select("total_amount, amount_paid");
-    if (access.divisionId) invoiceQuery = invoiceQuery.eq("division_id", access.divisionId);
-    const { data, error } = await invoiceQuery.limit(5000);
-    if (error) {
-      return NextResponse.json({ error: "Could not load authorised finance totals." }, { status: 503 });
-    }
-    finance = (data ?? []).reduce(
-      (totals, invoice) => {
-        totals.billed += Number(invoice.total_amount || 0);
-        totals.collected += Number(invoice.amount_paid || 0);
-        return totals;
-      },
-      { billed: 0, collected: 0, outstanding: 0 }
-    );
-    finance.outstanding = Math.max(0, finance.billed - finance.collected);
+    const { data, error } = await access.supabase.rpc("upwa_finance_summary", { p_division_id: access.divisionId, p_from: null, p_to: null });
+    if (error) return NextResponse.json({ error: "Could not load authorised finance totals." }, { status: 503 });
+    finance = { billed: Number(data?.billed ?? 0), collected: Number(data?.collected ?? 0), outstanding: Number(data?.unpaid ?? 0) };
   }
 
   let admissions: { submitted: number; underReview: number; offered: number } | null = null;

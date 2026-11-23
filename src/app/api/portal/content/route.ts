@@ -9,7 +9,7 @@ const ContentInput = z.object({
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   title: z.string().trim().min(1).max(180),
   summary: z.string().trim().max(500).optional().default(""),
-  body: z.record(z.unknown()).optional().default({}),
+  body: z.record(z.string(), z.unknown()).optional().default({}),
   seoTitle: z.string().trim().max(180).optional().default(""),
   seoDescription: z.string().trim().max(320).optional().default(""),
 });
@@ -68,7 +68,7 @@ export async function PATCH(request: NextRequest) {
     id: z.string().uuid(),
     title: z.string().trim().min(1).max(180).optional(),
     summary: z.string().trim().max(500).nullable().optional(),
-    body: z.record(z.unknown()).optional(),
+    body: z.record(z.string(), z.unknown()).optional(),
     seoTitle: z.string().trim().max(180).nullable().optional(),
     seoDescription: z.string().trim().max(320).nullable().optional(),
     status: z.enum(["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"]).optional(),
