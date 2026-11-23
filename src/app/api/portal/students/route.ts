@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     "admissions.manage",
     "parent.read",
     "student.read",
+    "care.manage",
   ]);
   if (!result.ok) return result.response;
 

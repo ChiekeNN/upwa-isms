@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   const requestedTypes = request.nextUrl.searchParams.get("type")?.split(",").filter(Boolean);
-  const allowedTypes = ["PAGE", "NEWS", "EVENT", "GALLERY", "CAMPUS_TOUR", "FACILITY", "ACADEMIC_OFFERING", "ACHIEVEMENT", "LEADERSHIP_NOTE", "CALENDAR"];
+  const allowedTypes = ["PAGE", "NEWS", "EVENT", "GALLERY", "CAMPUS_TOUR", "FACILITY", "ACADEMIC_OFFERING", "ACHIEVEMENT", "LEADERSHIP_NOTE", "CALENDAR", "ALUMNAE", "SCHOLARSHIP", "DEVELOPMENT_PROJECT", "DONATION_CAMPAIGN"];
   const types = requestedTypes?.filter((type) => allowedTypes.includes(type.toUpperCase())).map((type) => type.toUpperCase());
   let query = supabase
     .from("cms_entries")

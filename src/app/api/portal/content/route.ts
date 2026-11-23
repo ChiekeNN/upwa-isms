@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requirePortalAccess } from "@/lib/auth/portal-access";
 
-const ContentType = z.enum(["PAGE", "NEWS", "EVENT", "GALLERY", "CAMPUS_TOUR", "FACILITY", "ACADEMIC_OFFERING", "ACHIEVEMENT", "LEADERSHIP_NOTE", "CALENDAR"]);
+const ContentType = z.enum(["PAGE", "NEWS", "EVENT", "GALLERY", "CAMPUS_TOUR", "FACILITY", "ACADEMIC_OFFERING", "ACHIEVEMENT", "LEADERSHIP_NOTE", "CALENDAR", "ALUMNAE", "SCHOLARSHIP", "DEVELOPMENT_PROJECT", "DONATION_CAMPAIGN"]);
 const ContentInput = z.object({
   contentType: ContentType,
   divisionId: z.string().uuid().nullable().optional(),
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   title: z.string().trim().min(1).max(180),
   summary: z.string().trim().max(500).optional().default(""),
-  body: z.record(z.unknown()).optional().default({}),
+  body: z.record(z.string(), z.unknown()).optional().default({}),
   seoTitle: z.string().trim().max(180).optional().default(""),
   seoDescription: z.string().trim().max(320).optional().default(""),
 });
@@ -54,6 +54,10 @@ export async function POST(request: NextRequest) {
     .select("id, content_type, division_id, slug, title, status, updated_at")
     .single();
   if (error) return NextResponse.json({ error: "Content could not be saved. Confirm your division publishing permission." }, { status: 403 });
+  if (input.contentType === "DONATION_CAMPAIGN") {
+    const campaign = await result.access.supabase.rpc("upwa_create_donation_campaign", { p_cms_entry_id: data.id, p_campaign_code: input.slug, purpose: input.summary || input.title, p_target: null });
+    if (campaign.error) return NextResponse.json({ error: "Campaign draft saved, but the donation record could not be created. Contact the CMS administrator." }, { status: 503 });
+  }
   return NextResponse.json({ entry: data }, { status: 201 });
 }
 
@@ -68,7 +72,7 @@ export async function PATCH(request: NextRequest) {
     id: z.string().uuid(),
     title: z.string().trim().min(1).max(180).optional(),
     summary: z.string().trim().max(500).nullable().optional(),
-    body: z.record(z.unknown()).optional(),
+    body: z.record(z.string(), z.unknown()).optional(),
     seoTitle: z.string().trim().max(180).nullable().optional(),
     seoDescription: z.string().trim().max(320).nullable().optional(),
     status: z.enum(["DRAFT", "IN_REVIEW", "PUBLISHED", "ARCHIVED"]).optional(),
