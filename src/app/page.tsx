@@ -229,8 +229,8 @@ export default function UpwaIsmsPlatform() {
     <div className="min-h-screen flex flex-col">
       {/* Top Institutional Switcher Bar */}
       <header className="bg-upwa-navy text-white border-b border-slate-800 border-t-4 border-t-upwa-orange-500 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-2 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex w-full min-w-0 items-center gap-3 sm:w-auto sm:flex-1">
             <Image
               src="/upwa-logo.png"
               alt="UPWA International Schools official logo"
@@ -241,12 +241,18 @@ export default function UpwaIsmsPlatform() {
             />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold tracking-tight text-base sm:text-lg">
+                <span
+                  className={`font-bold tracking-tight leading-tight ${
+                    surface === "PUBLIC_SITE"
+                      ? "text-base sm:text-lg"
+                      : "text-sm sm:text-base lg:text-lg"
+                  }`}
+                >
                   {surface === "PUBLIC_SITE"
                     ? INSTITUTION_CONFIG.institutionalWebsiteName
-                    : INSTITUTION_CONFIG.officialShortName}
+                    : INSTITUTION_CONFIG.officialPlatformFullName}
                 </span>
-                <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-upwa-blue-950 text-upwa-blue-300 border border-upwa-blue-800">
+                <span className="hidden lg:inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-upwa-blue-950 text-upwa-blue-300 border border-upwa-blue-800">
                   {INSTITUTION_CONFIG.tagline}
                 </span>
               </div>
@@ -256,10 +262,10 @@ export default function UpwaIsmsPlatform() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-upwa-navy p-1 rounded-lg border border-slate-800">
+          <div className="flex w-full items-center gap-2 bg-upwa-navy p-1 rounded-lg border border-slate-800 sm:w-auto">
             <button
               onClick={() => setSurface("PUBLIC_SITE")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+              className={`flex-1 whitespace-nowrap px-3 py-1.5 text-center rounded-md text-xs font-medium transition sm:flex-none ${
                 surface === "PUBLIC_SITE"
                   ? "bg-upwa-blue-600 text-white"
                   : "text-slate-300 hover:text-white"
@@ -269,7 +275,7 @@ export default function UpwaIsmsPlatform() {
             </button>
             <button
               onClick={() => setSurface("UPWA_ISMS")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+              className={`flex-1 whitespace-nowrap px-3 py-1.5 text-center rounded-md text-xs font-medium transition sm:flex-none ${
                 surface === "UPWA_ISMS"
                   ? "bg-upwa-blue-600 text-white"
                   : "text-slate-300 hover:text-white"
