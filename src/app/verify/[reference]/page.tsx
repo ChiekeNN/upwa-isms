@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { INSTITUTION_CONFIG } from "@/config/institution";
 
 export default async function VerifyReportPage({
@@ -8,9 +9,16 @@ export default async function VerifyReportPage({
   const { reference } = await params;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-upwa-canvas flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-        <div className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+        <Image
+          src="/upwa-logo.png"
+          alt="UPWA International Schools official logo"
+          width={180}
+          height={200}
+          className="h-24 w-auto object-contain"
+        />
+        <div className="text-xs font-semibold uppercase tracking-wider text-upwa-blue-700">
           {INSTITUTION_CONFIG.officialShortName} Cryptographic Document Check
         </div>
         <h1 className="text-xl font-bold text-slate-900">
