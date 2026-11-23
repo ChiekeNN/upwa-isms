@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requirePortalAccess } from "@/lib/auth/portal-access";
 
-const ContentType = z.enum(["PAGE", "NEWS", "EVENT", "GALLERY", "CAMPUS_TOUR", "FACILITY", "ACADEMIC_OFFERING", "ACHIEVEMENT", "LEADERSHIP_NOTE", "CALENDAR"]);
+const ContentType = z.enum(["PAGE", "NEWS", "EVENT", "GALLERY", "CAMPUS_TOUR", "FACILITY", "ACADEMIC_OFFERING", "ACHIEVEMENT", "LEADERSHIP_NOTE", "CALENDAR", "ALUMNAE", "SCHOLARSHIP", "DEVELOPMENT_PROJECT", "DONATION_CAMPAIGN"]);
 const ContentInput = z.object({
   contentType: ContentType,
   divisionId: z.string().uuid().nullable().optional(),
@@ -54,6 +54,10 @@ export async function POST(request: NextRequest) {
     .select("id, content_type, division_id, slug, title, status, updated_at")
     .single();
   if (error) return NextResponse.json({ error: "Content could not be saved. Confirm your division publishing permission." }, { status: 403 });
+  if (input.contentType === "DONATION_CAMPAIGN") {
+    const campaign = await result.access.supabase.rpc("upwa_create_donation_campaign", { p_cms_entry_id: data.id, p_campaign_code: input.slug, purpose: input.summary || input.title, p_target: null });
+    if (campaign.error) return NextResponse.json({ error: "Campaign draft saved, but the donation record could not be created. Contact the CMS administrator." }, { status: 503 });
+  }
   return NextResponse.json({ entry: data }, { status: 201 });
 }
 

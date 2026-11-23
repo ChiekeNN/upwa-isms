@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ExecutiveConsole, FinanceWorkspace, ResultsCentre, ScoresWorkspace } from "./advanced-workspaces";
+import { ExecutiveConsole, FinanceWorkspace, MorningBrief, ResultsCentre, ScoresWorkspace } from "./advanced-workspaces";
 
 type Division = { id: string; code: string; name: string };
 type Role = { code: string; label: string; divisionId: string | null };
@@ -304,7 +304,7 @@ function Overview({ summary, permissions, division }: { summary: Summary | null;
   return <>
     <div className="mb-5"><h1 className="text-xl font-bold text-upwa-navy">{division === "ALL" ? "All UPWA Schools" : "Division dashboard"}</h1><p className="mt-1 text-sm text-slate-600">Live, role-scoped summary from the school database. No sample or placeholder records are included.</p></div>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{tiles.map((tile) => <section key={tile.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tile.label}</p><p className="mt-3 text-2xl font-bold text-upwa-navy">{tile.value}</p><p className="mt-2 text-xs leading-5 text-slate-500">{tile.note}</p></section>)}</div>
-    <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-bold text-upwa-navy">President&apos;s Morning Brief</h2><p className="mt-2 text-sm text-slate-600">This dashboard is generated from configured school records. Automated scheduled delivery, approval digest preferences and verified leadership messages can be configured once authorised content and notification settings are supplied.</p></section>
+    {permissions.includes("executive.read") && <MorningBrief division={division} />}
   </>;
 }
 
@@ -529,7 +529,7 @@ function ContentPanel({ entries, divisionId, onSaved }: { entries: ContentEntry[
   return <div className="space-y-5">
     <section className="rounded-2xl border border-slate-200 bg-white p-5"><h1 className="font-bold text-upwa-navy">Website CMS</h1><p className="mt-1 text-sm text-slate-600">Create and publish approved pages, news, events, calendars and division content. Publishing is restricted to your assigned scope.</p>
       <form onSubmit={createEntry} className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="text-xs font-semibold text-slate-600">Content type<select name="contentType" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">{["PAGE","NEWS","EVENT","CALENDAR","ACADEMIC_OFFERING","FACILITY","ACHIEVEMENT","LEADERSHIP_NOTE","GALLERY","CAMPUS_TOUR"].map((type) => <option key={type}>{type}</option>)}</select></label>
+        <label className="text-xs font-semibold text-slate-600">Content type<select name="contentType" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">{["PAGE","NEWS","EVENT","CALENDAR","ACADEMIC_OFFERING","FACILITY","ACHIEVEMENT","LEADERSHIP_NOTE","ALUMNAE","SCHOLARSHIP","DEVELOPMENT_PROJECT","DONATION_CAMPAIGN","GALLERY","CAMPUS_TOUR"].map((type) => <option key={type}>{type}</option>)}</select></label>
         <label className="text-xs font-semibold text-slate-600">URL slug<input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" placeholder="school-calendar" className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" /></label>
         <label className="text-xs font-semibold text-slate-600 sm:col-span-2">Title<input name="title" required maxLength={180} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" /></label>
         <label className="text-xs font-semibold text-slate-600 sm:col-span-2">Summary<textarea name="summary" maxLength={500} rows={2} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" /></label>

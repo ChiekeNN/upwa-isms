@@ -27,14 +27,26 @@ export async function POST(request: NextRequest) {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!isSupabaseConfigured() || !url || !serviceKey) return NextResponse.json({ error: "Payment ledger is not configured." }, { status: 503 });
   const supabase = createSupabaseClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
-  const eventReference = String(event?.data?.id ?? event?.id ?? reference);
-  const { error } = await supabase.rpc("upwa_record_paystack_verification", {
-    p_reference: reference,
-    p_event_reference: eventReference,
-    p_verified_amount: Number(tx.amount) / 100,
-    p_currency: String(tx.currency ?? "").toUpperCase(),
-    p_provider_status: String(tx.status ?? ""),
+  const { data: feeIntent, error: lookupError } = await supabase.from("payment_transactions").select("id").eq("external_reference", reference).maybeSingle();
+  if (lookupError) return NextResponse.json({ error: "Could not resolve the verified payment reference." }, { status: 503 });
+  if (feeIntent) {
+    const eventReference = String(event?.data?.id ?? event?.id ?? reference);
+    const { error } = await supabase.rpc("upwa_record_paystack_verification", {
+      p_reference: reference,
+      p_event_reference: eventReference,
+      p_verified_amount: Number(tx.amount) / 100,
+      p_currency: String(tx.currency ?? "").toUpperCase(),
+      p_provider_status: String(tx.status ?? ""),
+    });
+    if (error) return NextResponse.json({ error: "Verified school-fee payment could not be recorded. Contact finance before retrying." }, { status: 409 });
+    return NextResponse.json({ received: true, processed: true, type: "SCHOOL_FEES" });
+  }
+  const { data: donation, error: donationLookupError } = await supabase.from("donations").select("id").eq("external_reference", reference).maybeSingle();
+  if (donationLookupError || !donation) return NextResponse.json({ error: "No matching school-fee or heritage donation intent was found." }, { status: 404 });
+  const { error: donationError } = await supabase.rpc("upwa_record_donation_paystack_verification", {
+    p_reference: reference, p_amount: Number(tx.amount) / 100,
+    p_currency: String(tx.currency ?? "").toUpperCase(), p_status: String(tx.status ?? ""),
   });
-  if (error) return NextResponse.json({ error: "Verified payment could not be recorded. Contact finance support before retrying." }, { status: 409 });
-  return NextResponse.json({ received: true, processed: true });
+  if (donationError) return NextResponse.json({ error: "Verified donation could not be recorded." }, { status: 409 });
+  return NextResponse.json({ received: true, processed: true, type: "DONATION" });
 }
