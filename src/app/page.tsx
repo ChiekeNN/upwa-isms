@@ -251,7 +251,7 @@ export default function UpwaIsmsPlatform() {
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 hidden sm:block">
-                {INSTITUTION_CONFIG.location}
+                UPWA International Schools
               </p>
             </div>
           </div>
