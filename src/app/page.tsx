@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Image from "next/image";
 import {
   ShieldCheck,
   GraduationCap,
@@ -227,12 +228,17 @@ export default function UpwaIsmsPlatform() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top Institutional Switcher Bar */}
-      <header className="bg-slate-950 text-white border-b border-slate-800 sticky top-0 z-50">
+      <header className="bg-upwa-navy text-white border-b border-slate-800 border-t-4 border-t-upwa-orange-500 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-white shadow-sm">
-              U
-            </div>
+            <Image
+              src="/upwa-logo.png"
+              alt="UPWA International Schools official logo"
+              width={180}
+              height={200}
+              priority
+              className="h-12 w-11 shrink-0 object-contain drop-shadow-sm"
+            />
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold tracking-tight text-base sm:text-lg">
@@ -240,7 +246,7 @@ export default function UpwaIsmsPlatform() {
                     ? INSTITUTION_CONFIG.institutionalWebsiteName
                     : INSTITUTION_CONFIG.officialShortName}
                 </span>
-                <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-950 text-emerald-300 border border-emerald-800">
+                <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-upwa-blue-950 text-upwa-blue-300 border border-upwa-blue-800">
                   {INSTITUTION_CONFIG.tagline}
                 </span>
               </div>
@@ -250,12 +256,12 @@ export default function UpwaIsmsPlatform() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-lg border border-slate-800">
+          <div className="flex items-center gap-2 bg-upwa-navy p-1 rounded-lg border border-slate-800">
             <button
               onClick={() => setSurface("PUBLIC_SITE")}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
                 surface === "PUBLIC_SITE"
-                  ? "bg-emerald-600 text-white"
+                  ? "bg-upwa-blue-600 text-white"
                   : "text-slate-300 hover:text-white"
               }`}
             >
@@ -265,7 +271,7 @@ export default function UpwaIsmsPlatform() {
               onClick={() => setSurface("UPWA_ISMS")}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
                 surface === "UPWA_ISMS"
-                  ? "bg-emerald-600 text-white"
+                  ? "bg-upwa-blue-600 text-white"
                   : "text-slate-300 hover:text-white"
               }`}
             >
@@ -278,10 +284,10 @@ export default function UpwaIsmsPlatform() {
       {/* SURFACE 1: PUBLIC INSTITUTIONAL WEBSITE */}
       {surface === "PUBLIC_SITE" ? (
         <main className="flex-1">
-          <section className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 text-white py-16 px-4 sm:px-6 lg:px-8">
+          <section className="bg-gradient-to-br from-upwa-navy via-upwa-navy to-upwa-blue-950 text-white py-16 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-10 items-center">
               <div className="lg:col-span-7 space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/30 text-emerald-300 text-xs font-medium">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-upwa-blue-500/10 border border-upwa-blue-400/30 text-upwa-blue-300 text-xs font-medium">
                   <Sparkles className="w-3.5 h-3.5" />
                   University of Port Harcourt Women Association (UPWA)
                 </div>
@@ -299,7 +305,7 @@ export default function UpwaIsmsPlatform() {
                       setSurface("UPWA_ISMS");
                       setActiveTab("ADMISSIONS");
                     }}
-                    className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm flex items-center gap-2 shadow-lg"
+                    className="px-5 py-3 rounded-xl bg-upwa-blue-600 hover:bg-upwa-blue-500 text-white font-semibold text-sm flex items-center gap-2 shadow-lg"
                   >
                     Apply for 2026/2027 Admission
                     <ArrowUpRight className="w-4 h-4" />
@@ -318,7 +324,7 @@ export default function UpwaIsmsPlatform() {
 
               <div className="lg:col-span-5 grid gap-4">
                 <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-upwa-blue-400">
                     Division A Micro-Portal
                   </span>
                   <h3 className="text-xl font-bold mt-1">Early Years & Primary School</h3>
@@ -327,7 +333,7 @@ export default function UpwaIsmsPlatform() {
                   </p>
                 </div>
                 <div className="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-upwa-orange-400">
                     Division B Micro-Portal
                   </span>
                   <h3 className="text-xl font-bold mt-1">UPWA International Secondary</h3>
@@ -341,21 +347,21 @@ export default function UpwaIsmsPlatform() {
 
           <section className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 grid md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <Calendar className="w-6 h-6 text-emerald-600 mb-3" />
+              <Calendar className="w-6 h-6 text-upwa-blue-600 mb-3" />
               <h3 className="font-bold text-lg">2026/2027 Academic Calendar</h3>
               <p className="text-sm text-slate-600 mt-2">
                 First Term resumes September 2026. Entrance examination batches are scheduled online with instant PDF exam slips.
               </p>
             </div>
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <GraduationCap className="w-6 h-6 text-emerald-600 mb-3" />
+              <GraduationCap className="w-6 h-6 text-upwa-blue-600 mb-3" />
               <h3 className="font-bold text-lg">UPWA Alumnae & Endowment</h3>
               <p className="text-sm text-slate-600 mt-2">
                 Supporting merit scholarships, STEM laboratory upgrades, and heritage documentation led by UPWA executives.
               </p>
             </div>
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-              <MapPin className="w-6 h-6 text-emerald-600 mb-3" />
+              <MapPin className="w-6 h-6 text-upwa-blue-600 mb-3" />
               <h3 className="font-bold text-lg">Campus & Contact</h3>
               <p className="text-sm text-slate-600 mt-2">
                 University of Port Harcourt, Choba, Rivers State. Verified administrator-editable CMS content active.
@@ -370,7 +376,7 @@ export default function UpwaIsmsPlatform() {
           <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-upwa-blue-100 text-upwa-blue-800">
                   UPWA-ISMS Executive & Operations Shell
                 </span>
                 <span className="text-xs text-slate-500">Session: 2026/2027 • 1st Term</span>
@@ -398,7 +404,7 @@ export default function UpwaIsmsPlatform() {
                   onClick={() => setDivision(ctx.id)}
                   className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition ${
                     division === ctx.id
-                      ? "bg-slate-900 text-white shadow-sm"
+                      ? "bg-upwa-navy text-white shadow-sm"
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
@@ -426,7 +432,7 @@ export default function UpwaIsmsPlatform() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap border transition ${
                     activeTab === tab.id
-                      ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                      ? "bg-upwa-blue-600 text-white border-upwa-blue-600 shadow-sm"
                       : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                   }`}
                 >
@@ -444,10 +450,10 @@ export default function UpwaIsmsPlatform() {
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                   <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
                     <span>Active Enrolment</span>
-                    <Users className="w-4 h-4 text-emerald-600" />
+                    <Users className="w-4 h-4 text-upwa-blue-600" />
                   </div>
                   <p className="text-2xl font-extrabold mt-2">{metrics.enrolment} Students</p>
-                  <p className="text-xs text-emerald-700 mt-1">
+                  <p className="text-xs text-upwa-blue-700 mt-1">
                     {metrics.staff} Staff • Attendance {metrics.attendanceRate}
                   </p>
                 </div>
@@ -455,7 +461,7 @@ export default function UpwaIsmsPlatform() {
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                   <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
                     <span>Fees Collected vs Billed</span>
-                    <CreditCard className="w-4 h-4 text-emerald-600" />
+                    <CreditCard className="w-4 h-4 text-upwa-blue-600" />
                   </div>
                   <p className="text-2xl font-extrabold mt-2">{formatNaira(metrics.collected)}</p>
                   <p className="text-xs text-slate-600 mt-1">
@@ -476,12 +482,12 @@ export default function UpwaIsmsPlatform() {
                   </p>
                 </div>
 
-                <div className="bg-slate-900 text-white p-5 rounded-2xl shadow-sm">
+                <div className="bg-upwa-navy text-white p-5 rounded-2xl shadow-sm">
                   <div className="flex items-center justify-between text-slate-300 text-xs font-medium">
                     <span>Reconciled Cash Position</span>
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <ShieldCheck className="w-4 h-4 text-upwa-blue-400" />
                   </div>
-                  <p className="text-2xl font-extrabold mt-2 text-emerald-400">
+                  <p className="text-2xl font-extrabold mt-2 text-upwa-blue-400">
                     {formatNaira(metrics.cashPosition)}
                   </p>
                   <p className="text-xs text-slate-300 mt-1">
@@ -495,7 +501,7 @@ export default function UpwaIsmsPlatform() {
                 <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
+                      <span className="text-xs font-semibold text-upwa-blue-700 uppercase tracking-wider">
                         Automated Weekly Executive Digest
                       </span>
                       <h2 className="text-lg font-bold">President&apos;s Morning Brief</h2>
@@ -528,7 +534,7 @@ export default function UpwaIsmsPlatform() {
                   </div>
                   <ul className="space-y-2.5 text-xs">
                     <li className="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
-                      <span className="font-semibold text-emerald-700">[PAYSTACK_VERIFIED]</span>{" "}
+                      <span className="font-semibold text-upwa-green-700">[PAYSTACK_VERIFIED]</span>{" "}
                       Invoice #INV-2026-441 settled via idempotent webhook • 12m ago
                     </li>
                     <li className="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
@@ -564,7 +570,7 @@ export default function UpwaIsmsPlatform() {
                       type="checkbox"
                       checked={smartFeeLockEnabled}
                       onChange={(e) => setSmartFeeLockEnabled(e.target.checked)}
-                      className="rounded text-emerald-600"
+                      className="rounded text-upwa-blue-600"
                     />
                     <Lock className="w-3.5 h-3.5" />
                     Smart Fee-Lock Policy Active
@@ -632,7 +638,7 @@ export default function UpwaIsmsPlatform() {
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                                   row.status === "PUBLISHED"
-                                    ? "bg-emerald-100 text-emerald-800"
+                                    ? "bg-upwa-green-100 text-upwa-green-800"
                                     : row.status === "APPROVED"
                                     ? "bg-blue-100 text-blue-800"
                                     : "bg-amber-100 text-amber-800"
@@ -645,7 +651,7 @@ export default function UpwaIsmsPlatform() {
                               {row.status !== "PUBLISHED" ? (
                                 <button
                                   onClick={() => handleApproveScore(row.id)}
-                                  className="px-2.5 py-1 rounded-lg bg-slate-900 text-white hover:bg-slate-800 text-[11px] font-medium"
+                                  className="px-2.5 py-1 rounded-lg bg-upwa-navy text-white hover:bg-slate-800 text-[11px] font-medium"
                                 >
                                   Approve & Publish
                                 </button>
@@ -656,7 +662,7 @@ export default function UpwaIsmsPlatform() {
                               ) : (
                                 <button
                                   onClick={() => setQrInput(row.qrRef)}
-                                  className="inline-flex items-center gap-1 text-emerald-700 font-semibold hover:underline"
+                                  className="inline-flex items-center gap-1 text-upwa-blue-700 font-semibold hover:underline"
                                 >
                                   <QrCode className="w-3.5 h-3.5" /> Inspect QR ({row.qrRef})
                                 </button>
@@ -673,7 +679,7 @@ export default function UpwaIsmsPlatform() {
               {/* Cryptographic Public QR Verification Simulator */}
               <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm grid md:grid-cols-12 gap-6 items-center">
                 <div className="md:col-span-6 space-y-3">
-                  <span className="text-xs font-semibold text-emerald-700 uppercase">
+                  <span className="text-xs font-semibold text-upwa-blue-700 uppercase">
                     Public Verification Endpoint (/verify/[reference])
                   </span>
                   <h3 className="text-lg font-bold">Cryptographic Report Card Verification</h3>
@@ -697,7 +703,7 @@ export default function UpwaIsmsPlatform() {
                 <div className="md:col-span-6 bg-slate-50 rounded-xl p-4 border border-slate-200 text-xs space-y-2">
                   {verifiedRecord ? (
                     <>
-                      <div className="flex items-center gap-2 text-emerald-700 font-bold">
+                      <div className="flex items-center gap-2 text-upwa-green-700 font-bold">
                         <CheckCircle2 className="w-4 h-4" />
                         STATUS: VALID ISSUANCE (HMAC-SHA256 VERIFIED)
                       </div>
@@ -742,7 +748,7 @@ export default function UpwaIsmsPlatform() {
                     <span
                       className={`px-2.5 py-1 rounded-full font-semibold ${
                         receiptVerified
-                          ? "bg-emerald-100 text-emerald-800"
+                          ? "bg-upwa-green-100 text-upwa-green-800"
                           : "bg-amber-100 text-amber-800"
                       }`}
                     >
@@ -753,7 +759,7 @@ export default function UpwaIsmsPlatform() {
                     {!receiptVerified && (
                       <button
                         onClick={() => setReceiptVerified(true)}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-500"
+                        className="px-3 py-1.5 rounded-lg bg-upwa-blue-600 text-white font-semibold hover:bg-upwa-blue-500"
                       >
                         Approve & Issue Receipt
                       </button>
@@ -780,7 +786,7 @@ export default function UpwaIsmsPlatform() {
                       <p className="font-semibold">TUITION-BATCH-19 • Paystack Settlement</p>
                       <p className="text-slate-500">Division: Secondary • Webhook Idempotency Verified</p>
                     </div>
-                    <span className="font-bold text-emerald-700">+₦2,450,000</span>
+                    <span className="font-bold text-upwa-green-700">+₦2,450,000</span>
                   </div>
                 </div>
               </div>
@@ -792,7 +798,7 @@ export default function UpwaIsmsPlatform() {
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <span className="text-xs font-semibold text-emerald-700 uppercase">
+                  <span className="text-xs font-semibold text-upwa-blue-700 uppercase">
                     Division A (Crèche, Nursery & Primary) Security Protocol
                   </span>
                   <h2 className="text-lg font-bold">Digital Gate Pass & Child Release Log</h2>
@@ -802,7 +808,7 @@ export default function UpwaIsmsPlatform() {
                 </div>
                 <button
                   onClick={handleReleasePupil}
-                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold"
+                  className="px-4 py-2.5 rounded-xl bg-upwa-blue-600 hover:bg-upwa-blue-500 text-white text-xs font-semibold"
                 >
                   Verify & Log Pickup (Tamunoemi Briggs)
                 </button>
@@ -816,7 +822,7 @@ export default function UpwaIsmsPlatform() {
                       <p className="text-slate-600">Authorized Collector: {entry.guardian}</p>
                     </div>
                     <div className="text-right">
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
+                      <span className="px-2.5 py-0.5 rounded-full bg-upwa-green-100 text-upwa-green-800 font-semibold">
                         {entry.status} • {entry.time}
                       </span>
                       <p className="text-slate-500 mt-1">{entry.officer}</p>
@@ -870,14 +876,14 @@ export default function UpwaIsmsPlatform() {
                 </div>
                 <button
                   type="submit"
-                  className="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-semibold hover:bg-slate-800"
+                  className="px-4 py-2.5 rounded-xl bg-upwa-navy text-white font-semibold hover:bg-slate-800"
                 >
                   Submit Application & Generate Exam Slip
                 </button>
               </form>
 
               {admissionSubmitted && (
-                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
+                <div className="p-4 rounded-xl bg-upwa-green-50 border border-upwa-green-200 text-xs text-upwa-green-900">
                   <strong>Application Registered:</strong> Reference{" "}
                   <span className="font-mono font-bold">{admissionSubmitted}</span>. Entrance exam slip queued for download.
                 </div>
