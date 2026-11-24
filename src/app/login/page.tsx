@@ -89,7 +89,6 @@ export default function LoginPage() {
         </form>
         {error && <p role="alert" className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
         <Link href="/reset-password" className="mt-4 inline-block text-sm font-medium text-upwa-blue-700 underline">Set or reset your personal password</Link>
-        <p className="mt-4 text-sm text-slate-600">Presenting the prototype? <Link href="/demo-portal" className="font-semibold text-upwa-blue-700 underline">Open the read-only demo without signing in</Link>.</p>
         <p className="mt-6 text-xs leading-5 text-slate-500">Each staff member must use their own account. Never share passwords; individual accounts let the school audit who accessed the portal.</p>
         <Link href="/" className="mt-5 inline-flex rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-upwa-navy hover:bg-slate-50">← Back to home</Link>
       </section>
