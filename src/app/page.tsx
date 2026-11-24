@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BookOpen, CalendarDays, Camera, GraduationCap, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, CalendarDays, Camera, GraduationCap, MapPin, Sparkles } from "lucide-react";
 import PublicUpdates from "@/components/public-updates";
 import { INSTITUTION_CONFIG } from "@/config/institution";
 
@@ -26,7 +26,6 @@ const divisions = [
 const informationSections = [
   { title: "A welcome from the President", type: "LEADERSHIP_NOTE", description: "The President’s approved welcome will be published here." },
   { title: "Head Teacher and Principal notes", type: "LEADERSHIP_NOTE", description: "Approved messages from school leadership will appear here when supplied." },
-  { title: "Our school story", type: "PAGE", description: "The verified school history is being prepared for publication by an authorised editor." },
   { title: "Curriculum and academic offerings", type: "ACADEMIC_OFFERING", description: "Division-specific academic information will be published after school review." },
   { title: "Facilities, clubs and STEM activities", type: "FACILITY", description: "Only confirmed school facilities and activities will be listed here." },
   { title: "Photo galleries and campus tour", type: "GALLERY", description: "Approved photographs and tour material will appear here when provided by the school." },
@@ -42,10 +41,10 @@ export default function HomePage() {
             <span className="truncate text-sm font-bold text-upwa-navy sm:text-base">{INSTITUTION_CONFIG.institutionalWebsiteName}</span>
           </Link>
           <nav className="flex items-center gap-2 sm:gap-3" aria-label="Main navigation">
-            <Link href="#schools" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 sm:inline">Our schools</Link>
+            <Link href="#about" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 sm:inline">About UPWA</Link>
+            <Link href="#schools" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 md:inline">Our schools</Link>
             <Link href="/admissions" className="rounded-lg px-3 py-2 text-sm font-semibold text-upwa-blue-800 hover:bg-upwa-blue-50">Admissions</Link>
-            <Link href="/demo-portal" className="rounded-lg border border-upwa-blue-200 px-3 py-2 text-sm font-semibold text-upwa-blue-800 hover:bg-upwa-blue-50">Portal demo</Link>
-            <Link href="/login" className="rounded-lg bg-upwa-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-upwa-blue-800">Portal sign in</Link>
+            <Link href="/login" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Staff portal</Link>
           </nav>
         </div>
       </header>
@@ -60,8 +59,8 @@ export default function HomePage() {
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">A connected school community from Early Years through Secondary.</h1>
             <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">Explore school-approved information, separate division experiences, admissions updates and secure services for authorised families and staff.</p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/admissions" className="inline-flex items-center gap-2 rounded-xl bg-upwa-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-upwa-blue-500">Admissions enquiry <ArrowRight className="h-4 w-4" /></Link>
-              <Link href="/login" className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"><ShieldCheck className="h-4 w-4" /> Secure portal sign in</Link>
+              <Link href="#schools" className="inline-flex items-center gap-2 rounded-xl bg-upwa-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-upwa-blue-500">Explore our schools <ArrowRight className="h-4 w-4" /></Link>
+              <Link href="/admissions" className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">Admissions information</Link>
             </div>
           </div>
           <div className="grid gap-4 lg:col-span-5">
@@ -69,6 +68,18 @@ export default function HomePage() {
               const Icon = division.icon;
               return <Link href={division.href} key={division.href} className="group rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur transition hover:border-white/25 hover:bg-white/10"><div className="flex items-center justify-between"><span className={`text-xs font-semibold uppercase tracking-wider ${division.accent}`}>{division.name}</span><Icon className={`h-5 w-5 ${division.accent}`} /></div><h2 className="mt-2 text-xl font-bold">{division.classes}</h2><p className="mt-2 text-sm leading-6 text-slate-300">{division.description}</p><span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-white">Explore division <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span></Link>;
             })}
+          </div>
+        </div>
+      </section>
+
+      <section id="about" className="border-b border-slate-200 bg-white px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-upwa-blue-700">About UPWA International Group of Schools</p>
+          <h2 className="mt-2 text-3xl font-bold text-upwa-navy">Rooted in care, growing through education</h2>
+          <div className="mt-6 space-y-4 text-base leading-7 text-slate-700">
+            <p>The University of Port Harcourt Women Association (UPWA) International Group of Schools is an educational institution located within the University of Port Harcourt, Choba, Rivers State, Nigeria. It grew from a childcare and early-years education initiative into an institution offering nursery, primary, junior secondary and senior secondary education.</p>
+            <p>Its establishment and development are connected to the University of Port Harcourt Women Association, historically involved in educational, welfare and community-development initiatives. The institution combines association-led governance, a university-campus location and an educational model that publicly describes Nigerian and international curricular approaches.</p>
+            <p>The secondary section was inaugurated in 2020, and its pioneer senior secondary cohort graduated in 2024.</p>
           </div>
         </div>
       </section>
