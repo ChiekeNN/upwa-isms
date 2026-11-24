@@ -42,6 +42,7 @@ export default function HomePage() {
           </Link>
           <nav className="flex items-center gap-2 sm:gap-3" aria-label="Main navigation">
             <Link href="#about" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 sm:inline">About UPWA</Link>
+            <Link href="#vision-mission" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 lg:inline">Our approach</Link>
             <Link href="#schools" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 md:inline">Our schools</Link>
             <Link href="/admissions" className="rounded-lg px-3 py-2 text-sm font-semibold text-upwa-blue-800 hover:bg-upwa-blue-50">Admissions</Link>
             <Link href="/login" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Staff portal</Link>
@@ -81,6 +82,29 @@ export default function HomePage() {
             <p>Its establishment and development are connected to the University of Port Harcourt Women Association, historically involved in educational, welfare and community-development initiatives. The institution combines association-led governance, a university-campus location and an educational model that publicly describes Nigerian and international curricular approaches.</p>
             <p>The secondary section was inaugurated in 2020, and its pioneer senior secondary cohort graduated in 2024.</p>
           </div>
+        </div>
+      </section>
+
+      <section id="vision-mission" className="bg-upwa-canvas px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-7 max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-upwa-blue-700">What guides us</p>
+            <h2 className="mt-2 text-3xl font-bold text-upwa-navy">Vision, mission and educational philosophy</h2>
+          </div>
+          <div className="grid gap-5 lg:grid-cols-2">
+            <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-upwa-blue-700">Vision</p>
+              <blockquote className="mt-4 text-2xl font-semibold leading-relaxed text-upwa-navy">“Creativity unto greatness for excellent.”</blockquote>
+            </article>
+            <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-upwa-orange-700">Mission</p>
+              <blockquote className="mt-4 text-xl font-semibold leading-relaxed text-upwa-navy">“To develop and Nurture young minds into attaining moral and academic excellence and also to raise people that can lead excellently.”</blockquote>
+            </article>
+          </div>
+          <article className="mt-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+            <h3 className="text-lg font-bold text-upwa-navy">Educational philosophy</h3>
+            <p className="mt-3 max-w-5xl text-base leading-7 text-slate-700">The school describes a commitment to academic development, discipline, moral formation, creativity, leadership and preparation for further education. Its main website describes a combination of Nigerian and British/American educational approaches.</p>
+          </article>
         </div>
       </section>
 
