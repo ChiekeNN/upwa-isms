@@ -44,6 +44,7 @@ export default function HomePage() {
             <Link href="#about" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 sm:inline">About UPWA</Link>
             <Link href="#vision-mission" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 lg:inline">Our approach</Link>
             <Link href="#schools" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 md:inline">Our schools</Link>
+            <Link href="#programmes" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 xl:inline">Programmes</Link>
             <Link href="/admissions" className="rounded-lg px-3 py-2 text-sm font-semibold text-upwa-blue-800 hover:bg-upwa-blue-50">Admissions</Link>
             <Link href="/login" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Staff portal</Link>
           </nav>
@@ -108,6 +109,27 @@ export default function HomePage() {
         <InfoCard icon={<CalendarDays className="h-6 w-6 text-upwa-blue-700" />} title="School calendar" body="Official term dates and events will be published here after review by an authorised school editor." />
         <InfoCard icon={<GraduationCap className="h-6 w-6 text-upwa-orange-600" />} title="School news and achievements" body="Approved school updates, activities and achievements will be shared here when verified and supplied." />
         <InfoCard icon={<MapPin className="h-6 w-6 text-upwa-green-700" />} title="Campus and contact" body="Verified campus information and school contact details will be added by an authorised editor." />
+      </section>
+
+      <section id="programmes" className="bg-white px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-upwa-blue-700">Learning pathways</p>
+          <h2 className="mt-2 text-3xl font-bold text-upwa-navy">Academic structure and programmes</h2>
+          <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
+            <table className="w-full min-w-[38rem] border-collapse text-left text-sm">
+              <thead className="bg-upwa-blue-50 text-upwa-navy">
+                <tr><th scope="col" className="border-b border-r border-slate-200 px-4 py-3 font-bold">Section</th><th scope="col" className="border-b border-slate-200 px-4 py-3 font-bold">Focus</th></tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 bg-white">
+                <tr><th scope="row" className="border-r border-slate-200 px-4 py-3 font-semibold text-slate-800">Crèche/daycare</th><td className="px-4 py-3 text-slate-700">Child supervision and early care</td></tr>
+                <tr><th scope="row" className="border-r border-slate-200 px-4 py-3 font-semibold text-slate-800">Pre-nursery/nursery</th><td className="px-4 py-3 text-slate-700">Early childhood learning and school readiness</td></tr>
+                <tr><th scope="row" className="border-r border-slate-200 px-4 py-3 font-semibold text-slate-800">Primary</th><td className="px-4 py-3 text-slate-700">Literacy, numeracy, foundational subjects and social development</td></tr>
+                <tr><th scope="row" className="border-r border-slate-200 px-4 py-3 font-semibold text-slate-800">Junior Secondary</th><td className="px-4 py-3 text-slate-700">Broad-based secondary learning and junior-level examinations</td></tr>
+                <tr><th scope="row" className="border-r border-slate-200 px-4 py-3 font-semibold text-slate-800">Senior Secondary</th><td className="px-4 py-3 text-slate-700">Senior subject pathways, external examinations and tertiary preparation</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       <PublicUpdates />
