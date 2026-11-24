@@ -252,6 +252,32 @@ Build in the requested order:
 7. Data retention, deletion/correction rules, backup expectations, privacy notices, and incident contacts.
 8. Whether a digital wallet is genuinely required; legal/accounting approval before storing or transferring value.
 
-## 9. Current implementation audit rule
+## 9. Initial repository and production baseline
 
-The repository already contains an application shell, Supabase authentication/RBAC foundations, role-scoped portal APIs, and several academic, admissions, finance, reporting, communication, CMS, and integration components. The presence of code or a database table is not proof a complete workflow is deployed or safe. Phase 0 must produce a tested feature-by-feature status matrix and compare the production migration ledger with repository migrations before the roadmap labels any capability as live.
+This is a code/migration inventory, not a production-readiness certification. A route, table, or provider adapter counts as code presence only; the workflow still needs role-level tests, deployment verification, and school acceptance.
+
+| Area | Code already present | Main gaps before the full target is met |
+|---|---|---|
+| Authentication/RBAC | Email/password login and reset flow, role/permission schema, server-side access helper, role-scoped portal APIs and RLS policies. | Verify every route and RLS boundary; complete MFA/session controls, profile preferences, admin account lifecycle, and regression tests. |
+| Administration/registry | Student and staff creation, member import workflow, class/subject/section schema, admissions application/review flows. | No complete administrator configuration experience for education levels, sessions/terms, class arms, and subject assignments; expand parent/guardian/non-teaching-member workflows and import/export. |
+| Academic engine | Attendance, score entry, assessment components/batches, result/report snapshot and verification code, academic comments/behaviour-related schema. | Finish grading and school-defined scale administration, behavior/skills UI, calculation/approval coverage, term dashboards, report layouts, and the end-to-end teacher-to-parent release workflow. |
+| Finance | Invoice/payment/receipt/ledger schema and APIs, payment evidence/review, bank-account support, and Paystack-related webhook code. | Complete fee statements, waivers, finance reporting/reconciliation UX, production provider verification, remaining gateways, and wallets only after policy approval. |
+| Student/parent access | Parent/student roles and permission concepts exist in the portal model. | Build dedicated, relationship-scoped dashboards and account-linking flows; confirm students/guardians can see only released records for themselves or linked children. |
+| Communications/utilities | Notification templates/outbox/attempts and scheduled delivery code for provider adapters. | Build calendar/events, contact groups, campaign composition/preview, consent controls, delivery analytics, and verify production SMTP/SMS credentials. |
+| Public CMS | Public content APIs and a basic website content workflow exist. | Complete reviewed publishing for categories, galleries/groups, testimonials/groups, and richer public page management. |
+| Settings/integrations | REST route handlers, CSV-oriented import, webhooks, report verification, and selected provider adapters exist. | Add the settings/layout experience, XLSX import/export, additional contracted gateways, integration health/logging, and complete integration/security tests. |
+
+### Production migration gate
+
+The latest Supabase migration-history check found only the first four repository migrations recorded in production. Read-only checks also confirmed representative tables from both later migrations are absent (`assessment_batches`, `finance_activity`, `communication_preferences`, `notification_outbox`, and `payment_evidence`). The following repository migrations were not recorded at that check:
+
+- `supabase/migrations/20261123230000_results_finance_and_executive.sql`
+- `supabase/migrations/20261124010000_executive_communications_gate_care.sql`
+
+Do not treat features that depend on those migrations as production-ready. Before adding more database changes, verify the live schema/history, take a recoverable backup, rehearse the exact ordered migrations in a non-production database, and prepare rollback/monitoring. No production database migration was applied as part of this audit.
+
+### Recommended next vertical slice
+
+Proceed in this order: (1) test/document authentication and RBAC boundaries, (2) deliver authorised admin screens for education levels and sessions/terms, (3) add classes/arms/subject assignments, (4) finish member creation/import and guardian linking, then (5) wire those configurations into attendance, grading, and score workflows. This creates a usable administrative foundation without introducing fictional school records or bypassing portal security.
+
+The reference page at `nersapp.africa/features` could not be inspected from this workspace. The feature requirements in this plan remain the functional source of truth; visual matching should use screenshots or a visual capture supplied by UPWA, while preserving UPWA branding and portal authorization.
