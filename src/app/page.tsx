@@ -44,6 +44,7 @@ export default function HomePage() {
           <nav className="flex items-center gap-2 sm:gap-3" aria-label="Main navigation">
             <Link href="#schools" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 sm:inline">Our schools</Link>
             <Link href="/admissions" className="rounded-lg px-3 py-2 text-sm font-semibold text-upwa-blue-800 hover:bg-upwa-blue-50">Admissions</Link>
+            <Link href="/demo-portal" className="rounded-lg border border-upwa-blue-200 px-3 py-2 text-sm font-semibold text-upwa-blue-800 hover:bg-upwa-blue-50">Portal demo</Link>
             <Link href="/login" className="rounded-lg bg-upwa-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-upwa-blue-800">Portal sign in</Link>
           </nav>
         </div>
