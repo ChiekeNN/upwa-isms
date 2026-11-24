@@ -1,6 +1,8 @@
-# UPWA-ISMS VS Code AI Agent Sprint Prompts
+# Legacy VS Code AI Agent Sprint Prompts
 
-Open this workspace in VS Code, run `npm install`, copy `.env.example` to `.env.local`, and run the 4 Sprint Prompts sequentially in your VS Code AI Coding Agent (Copilot Agent / Cursor / Cline):
+> **Superseded:** Use [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) as the canonical scope and delivery roadmap. These older prompts predate the current codebase and must be reconciled against the repository and production migration history before use.
+
+The prompts below are preserved for historical reference only. Do not run them verbatim; use the current repository and the canonical implementation plan to create up-to-date tasks.
 
 ## Sprint 1: Complete Remaining Tables & RLS Policies
 > Expand `supabase/migrations/20261123000001_initial_upwa_isms_schema.sql` to include full RLS policies per role (`UPWA_PRESIDENT`, `PRIMARY_HEAD`, `SECONDARY_PRINCIPAL`, `BURSAR`, `TEACHER`, `PARENT`, `GATE_SECURITY`) and wire Supabase SSR authentication in `src/app/login/page.tsx`.
