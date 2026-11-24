@@ -101,10 +101,6 @@ export default function HomePage() {
               <blockquote className="mt-4 text-xl font-semibold leading-relaxed text-upwa-navy">“To develop and Nurture young minds into attaining moral and academic excellence and also to raise people that can lead excellently.”</blockquote>
             </article>
           </div>
-          <article className="mt-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h3 className="text-lg font-bold text-upwa-navy">Educational philosophy</h3>
-            <p className="mt-3 max-w-5xl text-base leading-7 text-slate-700">The school describes a commitment to academic development, discipline, moral formation, creativity, leadership and preparation for further education. Its main website describes a combination of Nigerian and British/American educational approaches.</p>
-          </article>
         </div>
       </section>
 
