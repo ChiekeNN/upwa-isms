@@ -26,7 +26,15 @@ type Attendance = { id: string; student_id: string; attendance_date: string; sta
 type Application = { id: string; application_number: string; applicant_first_name: string; applicant_middle_name: string | null; applicant_last_name: string; guardian_name: string; guardian_email: string | null; guardian_phone: string; status: string; created_at: string; exam_at: string | null };
 type ContentEntry = { id: string; content_type: string; division_id: string | null; slug: string; title: string; summary: string | null; status: string; is_placeholder: boolean };
 type StaffMember = { id: string; staff_number: string; full_name: string; position_title: string | null; employment_status: string; subjects: string[] };
-type View = "overview" | "executive" | "scores" | "results" | "finance" | "students" | "staff" | "attendance" | "admissions" | "website";
+type AcademicSetupData = {
+  sessions: { id: string; name: string; is_current: boolean; starts_on: string | null; ends_on: string | null }[];
+  terms: { id: string; session_id: string; name: string; is_current: boolean }[];
+  sections: { id: string; division_id: string; name: string }[];
+  classes: { id: string; division_id: string; section_id: string | null; name: string; sort_order: number }[];
+  arms: { id: string; class_id: string; name: string }[];
+  subjects: { id: string; division_id: string; code: string; name: string; is_active: boolean }[];
+};
+type View = "overview" | "executive" | "scores" | "results" | "finance" | "students" | "staff" | "attendance" | "admissions" | "website" | "academicSetup";
 
 const VIEW_PERMISSION: Record<View, string[]> = {
   overview: ["executive.read", "academics.read", "finance.read", "admissions.manage", "parent.read", "student.read", "care.manage", "pickup.manage"],
@@ -39,6 +47,7 @@ const VIEW_PERMISSION: Record<View, string[]> = {
   attendance: ["academics.read", "academics.manage", "parent.read", "student.read"],
   admissions: ["admissions.manage"],
   website: ["cms.manage"],
+  academicSetup: ["registry.manage"],
 };
 
 const STATUSES = ["PRESENT", "ABSENT", "LATE", "EXCUSED"] as const;
@@ -63,6 +72,7 @@ export default function PortalWorkspace() {
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [content, setContent] = useState<ContentEntry[]>([]);
+  const [academicSetup, setAcademicSetup] = useState<AcademicSetupData | null>(null);
   const [selectedStudent, setSelectedStudent] = useState("");
   const [attendanceStatus, setAttendanceStatus] = useState<(typeof STATUSES)[number]>("PRESENT");
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().slice(0, 10));
@@ -117,6 +127,7 @@ export default function PortalWorkspace() {
       attendance: "/api/portal/attendance",
       admissions: "/api/portal/admissions",
       website: "/api/portal/content",
+      academicSetup: "/api/portal/academics",
     };
     const url = view === "website" ? endpoint[view] : `${endpoint[view]}?division=${encodeURIComponent(division)}`;
     const response = await fetch(url, { cache: "no-store" });
@@ -144,6 +155,7 @@ export default function PortalWorkspace() {
     }
     if (view === "admissions") setApplications(result.applications ?? []);
     if (view === "website") setContent(result.entries ?? []);
+    if (view === "academicSetup") setAcademicSetup(result);
   }, [division, me, view, visibleViews]);
 
   useEffect(() => {
@@ -239,7 +251,7 @@ export default function PortalWorkspace() {
           {me.roles.length === 0 && <span className="rounded-full bg-upwa-orange-100 px-3 py-1 text-xs font-semibold text-upwa-orange-900">Role assignment pending</span>}
         </div>
         <nav aria-label="Portal modules" className="mb-6 flex gap-2 overflow-x-auto pb-1">
-          {visibleViews.map((item) => <button key={item} onClick={() => { setView(item); setError(""); }} className={`rounded-xl border px-4 py-2.5 text-sm font-semibold capitalize whitespace-nowrap ${view === item ? "border-upwa-blue-700 bg-upwa-blue-700 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-upwa-blue-50"}`}>{item === "overview" ? "Overview" : item === "executive" ? "Command Console" : item === "scores" ? "Scores & Broadsheet" : item === "results" ? "Results Centre" : item === "finance" ? "Finance" : item === "website" ? "Website CMS" : item}</button>)}
+          {visibleViews.map((item) => <button key={item} onClick={() => { setView(item); setError(""); }} className={`rounded-xl border px-4 py-2.5 text-sm font-semibold capitalize whitespace-nowrap ${view === item ? "border-upwa-blue-700 bg-upwa-blue-700 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-upwa-blue-50"}`}>{item === "overview" ? "Overview" : item === "executive" ? "Command Console" : item === "scores" ? "Scores & Broadsheet" : item === "results" ? "Results Centre" : item === "finance" ? "Finance" : item === "website" ? "Website CMS" : item === "academicSetup" ? "Academic Setup" : item}</button>)}
         </nav>
 
         {error && <div role="alert" className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{error}</div>}
@@ -285,8 +297,10 @@ export default function PortalWorkspace() {
           />
         ) : view === "admissions" ? (
           <AdmissionsPanel applications={applications} division={division} decisionNotes={decisionNotes} setDecisionNotes={setDecisionNotes} onChange={changeApplication} busy={busy} />
-        ) : (
+        ) : view === "website" ? (
           <ContentPanel entries={content} divisionId={currentDivision?.id ?? null} onSaved={loadModuleData} />
+        ) : (
+          <AcademicSetup data={academicSetup} division={division} onSaved={loadModuleData} />
         )}
       </div>
     </main>
@@ -306,6 +320,66 @@ function Overview({ summary, permissions, division }: { summary: Summary | null;
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{tiles.map((tile) => <section key={tile.label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{tile.label}</p><p className="mt-3 text-2xl font-bold text-upwa-navy">{tile.value}</p><p className="mt-2 text-xs leading-5 text-slate-500">{tile.note}</p></section>)}</div>
     {permissions.includes("executive.read") && <MorningBrief division={division} />}
   </>;
+}
+
+function AcademicSetup({ data, division, onSaved }: { data: AcademicSetupData | null; division: string; onSaved: () => Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [periodSessionId, setPeriodSessionId] = useState("");
+  useEffect(() => {
+    if (data && !periodSessionId) setPeriodSessionId(data.sessions.find((item) => item.is_current)?.id ?? data.sessions[0]?.id ?? "");
+  }, [data, periodSessionId]);
+
+  async function save(event: FormEvent<HTMLFormElement>, action: string) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const values = Object.fromEntries(new FormData(form).entries());
+    const body: Record<string, unknown> = { ...values, action, division };
+    if (action === "class") {
+      body.sectionId = String(values.sectionId ?? "") || null;
+      body.sortOrder = Number(values.sortOrder ?? 0);
+    }
+    if (action === "activate") body.termId = String(values.termId ?? "") || null;
+    setBusy(true); setError(""); setNotice("");
+    const response = await fetch("/api/portal/academics", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const result = await response.json();
+    setBusy(false);
+    if (!response.ok) { setError(result.error ?? "The academic setup could not be saved."); return; }
+    setNotice(action === "activate" ? "Current academic period updated." : "Saved successfully.");
+    form.reset();
+    await onSaved();
+  }
+
+  if (!data) return <Panel title="Academic setup" body="Loading school structure…" />;
+  const sectionName = new Map(data.sections.map((item) => [item.id, item.name]));
+  const currentSession = data.sessions.find((item) => item.is_current);
+  const currentTerm = data.terms.find((item) => item.is_current);
+  const field = "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm";
+  const label = "text-xs font-semibold text-slate-600";
+  return <div className="space-y-5">
+    <header><h1 className="text-xl font-bold text-upwa-navy">Academic setup</h1><p className="mt-1 text-sm text-slate-600">Configure the academic structure for this school division. Updates are restricted to authorised registry administrators.</p></header>
+    {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">{error}</p>}
+    {notice && <p role="status" className="rounded-xl border border-upwa-green-200 bg-upwa-green-50 p-3 text-sm text-upwa-green-900">{notice}</p>}
+    <section className="rounded-2xl border border-upwa-blue-100 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4"><div><h2 className="font-bold text-upwa-navy">Sessions & terms</h2><p className="mt-1 text-sm text-slate-600">Create academic periods and choose the active session and term.</p></div><div className="rounded-xl bg-upwa-blue-50 px-4 py-3 text-sm"><p><span className="font-semibold">Current session:</span> {currentSession?.name ?? "Not set"}</p><p className="mt-1"><span className="font-semibold">Current term:</span> {currentTerm?.name ?? "Not set"}</p></div></div>
+      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+        <form onSubmit={(event) => save(event, "session")} className="grid content-start gap-3 rounded-xl border border-slate-200 p-4"><h3 className="text-sm font-bold text-upwa-navy">Add academic session</h3><label className={label}>Session name<input name="name" placeholder="2026/2027" pattern="[0-9]{4}/[0-9]{4}" required className={field} /></label><label className={label}>Starts on<input name="startsOn" type="date" required className={field} /></label><label className={label}>Ends on<input name="endsOn" type="date" required className={field} /></label><button disabled={busy} className="rounded-lg bg-upwa-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Add session</button></form>
+        <form onSubmit={(event) => save(event, "term")} className="grid content-start gap-3 rounded-xl border border-slate-200 p-4"><h3 className="text-sm font-bold text-upwa-navy">Add term</h3><label className={label}>Session<select name="sessionId" required className={field}><option value="">Select session</option>{data.sessions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className={label}>Term name<input name="name" placeholder="First Term" required maxLength={60} className={field} /></label><button disabled={busy || data.sessions.length === 0} className="rounded-lg bg-upwa-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Add term</button></form>
+        <form onSubmit={(event) => save(event, "activate")} className="grid content-start gap-3 rounded-xl border border-slate-200 p-4"><h3 className="text-sm font-bold text-upwa-navy">Set current period</h3><label className={label}>Session<select name="sessionId" value={periodSessionId} onChange={(event) => setPeriodSessionId(event.target.value)} required className={field}><option value="">Select session</option>{data.sessions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label className={label}>Term<select name="termId" className={field}><option value="">No current term yet</option>{data.terms.filter((item) => item.session_id === periodSessionId).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><button disabled={busy || data.sessions.length === 0} className="rounded-lg border border-upwa-blue-200 px-4 py-2 text-sm font-semibold text-upwa-blue-800 disabled:opacity-50">Set active session & term</button></form>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">{data.sessions.map((session) => <article key={session.id} className="rounded-xl bg-slate-50 p-4"><div className="flex justify-between gap-2"><h3 className="font-semibold text-upwa-navy">{session.name}</h3>{session.is_current && <span className="rounded-full bg-upwa-green-100 px-2 py-1 text-[11px] font-bold text-upwa-green-800">CURRENT</span>}</div><p className="mt-1 text-xs text-slate-500">{session.starts_on ?? "Start date not set"} — {session.ends_on ?? "End date not set"}</p><p className="mt-2 text-xs text-slate-600">{data.terms.filter((term) => term.session_id === session.id).map((term) => `${term.name}${term.is_current ? " · Current" : ""}`).join("  /  ") || "No terms yet"}</p></article>)}</div>
+    </section>
+
+    <div className="grid gap-5 xl:grid-cols-2">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-bold text-upwa-navy">Education levels</h2><p className="mt-1 text-sm text-slate-600">Add the levels or sections offered by this division.</p><form onSubmit={(event) => save(event, "section")} className="mt-4 flex flex-wrap gap-2"><input name="name" required maxLength={80} placeholder="e.g. Early Years" className="min-w-48 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm" /><button disabled={busy} className="rounded-lg bg-upwa-blue-700 px-4 py-2 text-sm font-semibold text-white">Add level</button></form><div className="mt-4 flex flex-wrap gap-2">{data.sections.map((item) => <span key={item.id} className="rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-700">{item.name}</span>)}{data.sections.length === 0 && <p className="text-sm text-slate-500">No education levels configured.</p>}</div></section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-bold text-upwa-navy">Classes & arms</h2><p className="mt-1 text-sm text-slate-600">Create classes, assign a level, and add class arms.</p><form onSubmit={(event) => save(event, "class")} className="mt-4 grid gap-2 sm:grid-cols-[1fr_1fr_auto]"><input name="name" required maxLength={80} placeholder="Class name" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" /><select name="sectionId" className="rounded-lg border border-slate-300 px-3 py-2 text-sm"><option value="">No level selected</option>{data.sections.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><button disabled={busy} className="rounded-lg bg-upwa-blue-700 px-4 py-2 text-sm font-semibold text-white">Add class</button><input name="sortOrder" type="hidden" value="0" /></form><div className="mt-4 space-y-2">{data.classes.map((item) => <article key={item.id} className="rounded-xl bg-slate-50 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="font-semibold text-upwa-navy">{item.name}</p><p className="text-xs text-slate-500">{sectionName.get(item.section_id ?? "") ?? "Education level not assigned"}</p></div><form onSubmit={(event) => save(event, "arm")} className="flex gap-2"><input type="hidden" name="classId" value={item.id} /><input name="name" required maxLength={40} placeholder="Arm (e.g. A)" className="w-32 rounded-lg border border-slate-300 px-2 py-1.5 text-sm" /><button disabled={busy} className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold">Add arm</button></form></div><div className="mt-2 flex gap-1">{data.arms.filter((arm) => arm.class_id === item.id).map((arm) => <span key={arm.id} className="rounded-full bg-white px-2 py-1 text-xs text-slate-600">{arm.name}</span>)}</div></article>)}{data.classes.length === 0 && <p className="text-sm text-slate-500">No classes configured.</p>}</div></section>
+    </div>
+
+    <section className="rounded-2xl border border-slate-200 bg-white p-5"><h2 className="font-bold text-upwa-navy">Subjects</h2><p className="mt-1 text-sm text-slate-600">Maintain the subject catalogue available to this school division.</p><form onSubmit={(event) => save(event, "subject")} className="mt-4 grid gap-2 sm:grid-cols-[12rem_1fr_auto]"><input name="code" required maxLength={20} placeholder="Subject code" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" /><input name="name" required maxLength={100} placeholder="Subject name" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" /><button disabled={busy} className="rounded-lg bg-upwa-blue-700 px-4 py-2 text-sm font-semibold text-white">Add subject</button></form><div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{data.subjects.map((subject) => <div key={subject.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3"><span className="font-medium text-slate-800">{subject.name}</span><span className="font-mono text-xs text-slate-500">{subject.code}</span></div>)}{data.subjects.length === 0 && <p className="text-sm text-slate-500">No subjects configured.</p>}</div>
+    </section>
+  </div>;
 }
 
 function StudentList({ students, classes, division, canCreate, onCreated }: { students: Student[]; classes: SchoolClass[]; division: string; canCreate: boolean; onCreated: () => Promise<void> }) {

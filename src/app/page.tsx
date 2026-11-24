@@ -46,7 +46,7 @@ export default function HomePage() {
             <Link href="#schools" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 md:inline">Our schools</Link>
             <Link href="#programmes" className="hidden text-sm font-semibold text-slate-700 hover:text-upwa-blue-700 xl:inline">Programmes</Link>
             <Link href="/admissions" className="rounded-lg px-3 py-2 text-sm font-semibold text-upwa-blue-800 hover:bg-upwa-blue-50">Admissions</Link>
-            <Link href="/login" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Staff portal</Link>
+            <Link href="/portal" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Explore portal demo</Link>
           </nav>
         </div>
       </header>
