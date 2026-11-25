@@ -296,7 +296,7 @@ function buildStudents(guardians: Guardian[], sessionStartYear: number): Student
 
 function buildStaff(): Staff[] {
   const seeds: [string, string, string, Gender, Staff["role"], string, string, string][] = [
-    ["Mrs.", "Chinwe", "Chike", "FEMALE", "Head Teacher", "—", "Primary / Early Years", "0803 552 7710"],
+    ["Mrs.", "Ndidi", "Okeke", "FEMALE", "Head Teacher", "—", "Primary / Early Years", "0803 552 7710"],
     ["Mr.", "Anthony", "Wokoma", "MALE", "Principal", "—", "Secondary", "0816 447 9920"],
     ["Mrs.", "Bisi", "Adekunle", "FEMALE", "Vice Principal", "Economics", "SSS 1–3", "0809 336 1174"],
     ["Mrs.", "Uchenna", "Aluu", "FEMALE", "Class Teacher", "Literacy & Numeracy", "Primary 1A", "0706 228 4415"],
