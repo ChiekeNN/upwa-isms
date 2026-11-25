@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/cron/president-report?kind=daily", "schedule": "0 15 * * 1-5" },
+    { "path": "/api/cron/president-report?kind=weekly", "schedule": "0 17 * * 5" }
+  ]
+}

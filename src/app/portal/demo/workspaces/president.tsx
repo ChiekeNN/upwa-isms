@@ -38,18 +38,9 @@ import {
 } from "lucide-react";
 import { useDemo } from "../store";
 import { Badge, Button, Card, CardHeader } from "../ui";
-import {
-  compactNaira,
-  confirmedPayments,
-  formatDate,
-  formatLongDate,
-  invoiceStatus,
-  invoiceTotal,
-  naira,
-  termLabel,
-  weekdayOf,
-} from "../format";
-import type { Expense } from "../types";
+import { compactNaira, formatDate, formatLongDate, naira, termLabel, weekdayOf } from "../format";
+import { computePresidentBrief, iso } from "../president-brief";
+import { buildPresidentPdf } from "../president-pdf";
 
 /**
  * The President's Office.
@@ -81,18 +72,6 @@ const TOOLTIP_STYLE = {
   fontSize: 12,
   boxShadow: "0 12px 32px -12px rgba(11,46,70,0.25)",
 } as const;
-
-const iso = (d: Date) => d.toISOString().slice(0, 10);
-const addDays = (d: Date, n: number) => {
-  const copy = new Date(d);
-  copy.setDate(copy.getDate() + n);
-  return copy;
-};
-const mondayOf = (d: Date) => {
-  const copy = new Date(d);
-  copy.setDate(copy.getDate() - ((copy.getDay() + 6) % 7));
-  return copy;
-};
 
 /* ------------------------------- animations ------------------------------ */
 
@@ -176,189 +155,10 @@ function Meter({ value, tone, caption }: { value: number; tone: string; caption:
 
 export function PresidentWorkspace() {
   const { data, notify } = useDemo();
-  const [manualSends, setManualSends] = useState<{ kind: "daily" | "weekly"; at: Date }[]>([]);
+  const [manualSends, setManualSends] = useState<{ kind: "daily" | "weekly"; at: Date; channel: "provider" | "local" }[]>([]);
   const [building, setBuilding] = useState<"" | "daily" | "weekly">("");
 
-  const brief = useMemo(() => {
-    if (!data) return null;
-    const { students, attendance, payments, expenses, invoices, applications, events, messages, staff, settings, scores, subjects } = data;
-    const now = new Date();
-    const today = iso(now);
-
-    const registerDates = Array.from(new Set(attendance.map((record) => record.date))).sort();
-    const latestRegister = registerDates[registerDates.length - 1] ?? today;
-    const registerIsToday = latestRegister === today;
-    const register = attendance.filter((record) => record.date === latestRegister);
-    const present = register.filter((record) => record.status === "PRESENT").length;
-    const late = register.filter((record) => record.status === "LATE").length;
-    const absent = register.filter((record) => record.status === "ABSENT").length;
-    const excused = register.filter((record) => record.status === "EXCUSED").length;
-    const attendanceRate = register.length ? Math.round(((present + late) / register.length) * 100) : 0;
-    const termAttendance = attendance.length
-      ? Math.round(((attendance.filter((record) => record.status !== "ABSENT").length) / attendance.length) * 100)
-      : 0;
-
-    const paidToday = payments.filter((payment) => payment.status === "CONFIRMED" && payment.paidAt === today);
-    const pending = payments.filter((payment) => payment.status === "PENDING_REVIEW");
-    const spentToday = expenses.filter((expense) => expense.date === today);
-
-    const billed = invoices.reduce((sum, invoice) => sum + invoiceTotal(invoice), 0);
-    const collected = payments.filter((payment) => payment.status === "CONFIRMED").reduce((sum, payment) => sum + payment.amount, 0);
-    const spent = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-    const cash = settings.openingBalance + collected - spent;
-    const collectionRate = billed ? Math.round((collected / billed) * 100) : 0;
-    const spendRate = billed ? Math.round((spent / billed) * 100) : 0;
-
-    const overdue = invoices.filter((invoice) => invoiceStatus(invoice, payments) === "OVERDUE");
-    const overdueValue = overdue.reduce((sum, invoice) => sum + Math.max(0, invoiceTotal(invoice) - confirmedPayments(payments, invoice.id)), 0);
-    const instalmentDue = invoices.filter((invoice) => invoice.dueDate === settings.termEndDate && invoiceStatus(invoice, payments) !== "PAID");
-    const instalmentValue = instalmentDue.reduce((sum, invoice) => sum + Math.max(0, invoiceTotal(invoice) - confirmedPayments(payments, invoice.id)), 0);
-
-    /* weekly buckets from the first Monday on or before term start */
-    const firstMonday = mondayOf(new Date(`${settings.termStartDate}T09:00:00`));
-    const weeks: { label: string; start: Date; income: number; spend: number }[] = [];
-    for (let cursor = new Date(firstMonday); cursor <= now; cursor = addDays(cursor, 7)) {
-      const end = addDays(cursor, 7);
-      weeks.push({
-        label: formatDate(iso(cursor)).replace(/ \d{4}$/, ""),
-        start: new Date(cursor),
-        income: payments
-          .filter((payment) => payment.status === "CONFIRMED" && new Date(`${payment.paidAt}T09:00:00`) >= cursor && new Date(`${payment.paidAt}T09:00:00`) < end)
-          .reduce((sum, payment) => sum + payment.amount, 0),
-        spend: expenses
-          .filter((expense) => new Date(`${expense.date}T09:00:00`) >= cursor && new Date(`${expense.date}T09:00:00`) < end)
-          .reduce((sum, expense) => sum + expense.amount, 0),
-      });
-    }
-    const weeklyChart = weeks.map((week) => ({ ...week, net: week.income - week.spend }));
-
-    const byCategory = Object.entries(
-      expenses.reduce<Record<string, number>>((acc, expense) => {
-        acc[expense.category] = (acc[expense.category] ?? 0) + expense.amount;
-        return acc;
-      }, {}),
-    )
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, value]) => ({ name, value }));
-
-    /* this week vs last week */
-    const thisMonday = mondayOf(now);
-    const lastMonday = addDays(thisMonday, -7);
-    const inWindow = (date: string, from: Date, to: Date) => {
-      const d = new Date(`${date}T09:00:00`);
-      return d >= from && d < to;
-    };
-    const weekStats = (from: Date, to: Date) => {
-      const recs = attendance.filter((record) => inWindow(record.date, from, to));
-      const rate = recs.length
-        ? Math.round((recs.filter((record) => record.status !== "ABSENT").length / recs.length) * 100)
-        : 0;
-      return {
-        rate,
-        income: payments.filter((p) => p.status === "CONFIRMED" && inWindow(p.paidAt, from, to)).reduce((s, p) => s + p.amount, 0),
-        spend: expenses.filter((e) => inWindow(e.date, from, to)).reduce((s, e) => s + e.amount, 0),
-        applications: applications.filter((a) => inWindow(a.submittedAt, from, to)).length,
-        messages: messages.filter((m) => m.status === "SENT" && inWindow(m.sentAt, from, to)).length,
-        events: events.filter((e) => inWindow(e.date, from, to)).length,
-        registers: new Set(recs.map((r) => `${r.date}|${r.className}|${r.arm}`)).size,
-      };
-    };
-    const thisWeek = weekStats(thisMonday, addDays(thisMonday, 7));
-    const lastWeek = weekStats(lastMonday, thisMonday);
-
-    /* departments */
-    const academicDepartments = [
-      { name: "Early Years", icon: HeartHandshake, tone: "bg-upwa-orange-50 text-upwa-orange-800", match: (c: string) => ["Crèche", "Pre-Nursery", "Nursery 1", "Nursery 2"].includes(c) },
-      { name: "Primary", icon: School, tone: "bg-upwa-blue-50 text-upwa-blue-800", match: (c: string) => c.startsWith("Primary") },
-      { name: "Junior Secondary", icon: School, tone: "bg-upwa-green-50 text-upwa-green-800", match: (c: string) => c.startsWith("JSS") },
-      { name: "Senior Secondary", icon: School, tone: "bg-violet-50 text-violet-800", match: (c: string) => c.startsWith("SSS") },
-    ].map((department) => {
-      const roll = students.filter((student) => student.status === "ACTIVE" && department.match(student.className));
-      const ids = new Set(roll.map((student) => student.id));
-      const recs = register.filter((record) => ids.has(record.studentId));
-      const rate = recs.length ? Math.round((recs.filter((record) => record.status !== "ABSENT").length / recs.length) * 100) : 0;
-      const theirInvoices = invoices.filter((invoice) => ids.has(invoice.studentId));
-      const theirBilled = theirInvoices.reduce((sum, invoice) => sum + invoiceTotal(invoice), 0);
-      const theirPaid = theirInvoices.reduce((sum, invoice) => sum + confirmedPayments(payments, invoice.id), 0);
-      const theirRate = theirBilled ? Math.round((theirPaid / theirBilled) * 100) : 0;
-      return { ...department, roll: roll.length, rate, feesRate: theirRate, outstanding: theirBilled - theirPaid };
-    });
-
-    const offices = [
-      {
-        name: "Bursary",
-        icon: Wallet,
-        tone: "bg-upwa-green-50 text-upwa-green-800",
-        headline: `${naira(paidToday.reduce((s, p) => s + p.amount, 0))} banked today`,
-        detail: `${pending.length} transfer(s) awaiting confirmation · ${overdue.length} families overdue`,
-      },
-      {
-        name: "Admissions Office",
-        icon: Inbox,
-        tone: "bg-upwa-blue-50 text-upwa-blue-800",
-        headline: `${applications.filter((a) => ["SUBMITTED", "UNDER_REVIEW", "EXAM_SCHEDULED"].includes(a.status)).length} live applications`,
-        detail: `${applications.filter((a) => a.status === "OFFER_MADE").length} offer(s) awaiting parents · ${thisWeek.applications} new this week`,
-      },
-      {
-        name: "ICT & Platform",
-        icon: Cpu,
-        tone: "bg-upwa-canvas text-upwa-blue-800",
-        headline: `${messages.filter((m) => m.status === "SENT").length} broadcasts sent this term`,
-        detail: `${messages.filter((m) => m.status === "SENT").reduce((s, m) => s + m.recipients, 0)} parent touches · portal & Paystack live`,
-      },
-      {
-        name: "Student Welfare",
-        icon: Activity,
-        tone: "bg-rose-50 text-rose-700",
-        headline: `${absent} absence(s) in today's register`,
-        detail: `${excused} excused · parents of unexcused absences auto-notified by SMS`,
-      },
-    ];
-
-    /* attention list */
-    const attention: { tone: "red" | "orange" | "blue"; text: string }[] = [];
-    if (overdue.length) attention.push({ tone: "red", text: `${overdue.length} families are past their fee date, owing ${naira(overdueValue)}. The bursary is on installment plans where agreed.` });
-    if (pending.length) attention.push({ tone: "orange", text: `${pending.length} bank transfer(s) totalling ${naira(pending.reduce((s, p) => s + p.amount, 0))} await Mrs. Ameh's confirmation.` });
-    if (absent > 0) attention.push({ tone: "orange", text: `${absent} pupil(s) absent without excuse today; parents were notified at close of the register.` });
-    if (instalmentDue.length) attention.push({ tone: "blue", text: `${instalmentDue.length} installment balances (${naira(instalmentValue)}) fall due on ${formatDate(settings.termEndDate)} — the last day of term.` });
-    const onLeave = staff.filter((member) => member.status === "ON_LEAVE");
-    if (onLeave.length) attention.push({ tone: "blue", text: `${onLeave.map((m) => `${m.title} ${m.firstName} ${m.lastName}`).join(", ")} on approved leave; classes are covered.` });
-    if (!attention.length) attention.push({ tone: "blue", text: "Nothing needs your attention today. A quiet day is a good day." });
-
-    /* delivery log: daily at 4 PM on workdays, weekly Fridays 6 PM */
-    const log: { kind: "daily" | "weekly"; at: string; state: "delivered" | "scheduled" }[] = [];
-    for (let cursor = addDays(thisMonday, -7); cursor <= now; cursor = addDays(cursor, 1)) {
-      const day = cursor.getDay();
-      if (day === 5) {
-        const at = addDays(cursor, 0);
-        at.setHours(18, 0, 0, 0);
-        log.push({ kind: "weekly", at: at.toISOString(), state: at <= now ? "delivered" : "scheduled" });
-      } else if (day >= 1 && day <= 4) {
-        const at = new Date(cursor);
-        at.setHours(16, 0, 0, 0);
-        log.push({ kind: "daily", at: at.toISOString(), state: at <= now ? "delivered" : "scheduled" });
-      }
-    }
-    const todayClose = new Date(now);
-    todayClose.setHours(16, 0, 0, 0);
-    if (now.getDay() >= 1 && now.getDay() <= 5) log.push({ kind: "daily", at: todayClose.toISOString(), state: todayClose <= now ? "delivered" : "scheduled" });
-
-    const marksOnFile = scores.length;
-    const nextFriday = addDays(thisMonday, 4);
-    const lastFriday = addDays(thisMonday, -3);
-
-    return {
-      now, today, registerIsToday, latestRegister,
-      present, late, absent, excused, attendanceRate, termAttendance, registerCount: register.length,
-      paidToday, pending, spentToday,
-      billed, collected, spent, cash, collectionRate, spendRate,
-      overdue, overdueValue, instalmentDue, instalmentValue,
-      weeklyChart, byCategory, thisWeek, lastWeek, thisMonday, lastFriday, nextFriday,
-      academicDepartments, offices, attention, log,
-      marksOnFile, subjects: subjects.length, staff, settings, students, events, messages,
-      roll: students.filter((s) => s.status === "ACTIVE").length,
-    };
-  }, [data]);
+  const brief = useMemo(() => (data ? computePresidentBrief(data) : null), [data]);
 
   if (!data || !brief) {
     return <p className="py-10 text-center text-sm text-slate-500">Preparing the President's brief…</p>;
@@ -370,117 +170,16 @@ export function PresidentWorkspace() {
   const closeOfWork = hour >= 16;
 
   async function downloadPdf(kind: "daily" | "weekly") {
-    if (!brief || !data) return;
+    if (!data) return;
     setBuilding(kind);
     try {
-      const { jsPDF } = await import("jspdf");
-      const doc = new jsPDF({ unit: "pt", format: "a4" });
-      const width = doc.internal.pageSize.getWidth();
-      const margin = 48;
-      const max = width - margin * 2;
-      let y = 54;
-
-      const ensure = (need: number) => {
-        if (y + need > 790) {
-          doc.addPage();
-          y = 54;
-        }
-      };
-      const text = (body: string, size = 10, style: "normal" | "bold" | "italic" = "normal", colour: [number, number, number] = [60, 60, 60], gap = 5) => {
-        doc.setFont("helvetica", style);
-        doc.setFontSize(size);
-        doc.setTextColor(colour[0], colour[1], colour[2]);
-        const lines = doc.splitTextToSize(body, max) as string[];
-        lines.forEach((line) => {
-          ensure(size + 4);
-          doc.text(line, margin, y);
-          y += size + gap;
-        });
-      };
-      const heading = (body: string) => {
-        ensure(30);
-        y += 6;
-        doc.setDrawColor(243, 154, 30);
-        doc.setLineWidth(1.2);
-        doc.line(margin, y - 10, margin + 26, y - 10);
-        text(body.toUpperCase(), 10.5, "bold", [11, 46, 70], 4);
-      };
-      const row = (label: string, value: string) => {
-        ensure(18);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        doc.setTextColor(60, 60, 60);
-        doc.text(label, margin, y);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(11, 46, 70);
-        doc.text(value, width - margin, y, { align: "right" });
-        y += 16;
-      };
-
-      doc.setFillColor(11, 46, 70);
-      doc.rect(0, 0, width, 8, "F");
-      text("UPWA INTERNATIONAL GROUP OF SCHOOLS", 13, "bold", [11, 46, 70], 3);
-      text("University of Port Harcourt Women Association · Choba, Rivers State", 9, "normal", [120, 120, 120], 10);
-      text(kind === "daily" ? "THE PRESIDENT'S DAILY BRIEF — CLOSE OF WORK" : "THE PRESIDENT'S WEEKLY COMPREHENSIVE REPORT", 12, "bold", [243, 154, 30], 4);
-      text(
-        kind === "daily"
-          ? `${weekdayOf(brief.today)}, ${formatLongDate(brief.today)} · prepared 4:00 PM`
-          : `Week of ${formatLongDate(iso(brief.thisMonday))} · delivered Friday 6:00 PM`,
-        9.5,
-        "italic",
-        [120, 120, 120],
-        3,
-      );
-      text(`For: Dr. Chinwe Chike, President · ${settings.presidentEmail}`, 9.5, "normal", [120, 120, 120], 12);
-
-      heading("In plain words");
-      if (kind === "daily") {
-        text(`${brief.attendanceRate}% of pupils were in school on ${formatDate(brief.latestRegister)} — about ${Math.round(brief.attendanceRate / 10)} in every 10. The bursary banked ${naira(brief.paidToday.reduce((s, p) => s + p.amount, 0))} and the school spent ${naira(brief.spentToday.reduce((s, e) => s + e.amount, 0))}. ${brief.attention[0].text}`);
-      } else {
-        text(`Attendance averaged ${brief.thisWeek.rate}% against ${brief.lastWeek.rate}% last week. The school collected ${naira(brief.thisWeek.income)} and spent ${naira(brief.thisWeek.spend)}, leaving ${naira(brief.cash)} in the account. ${brief.attention[0].text}`);
-      }
-
-      heading("Money");
-      row("Billed this term", naira(brief.billed));
-      row("Collected (confirmed)", `${naira(brief.collected)}  (${brief.collectionRate}%)`);
-      row("Spent this term", naira(brief.spent));
-      row("Opening balance, first day of term", naira(settings.openingBalance));
-      row("Money in the account today", naira(brief.cash));
-      row("Still owed by families past their date", naira(brief.overdueValue));
-      if (kind === "weekly") {
-        row("Collected this week", naira(brief.thisWeek.income));
-        row("Spent this week", naira(brief.thisWeek.spend));
-      }
-      y += 4;
-      text("Biggest spending areas this term:", 10, "bold", [11, 46, 70], 4);
-      brief.byCategory.slice(0, 6).forEach((category) => row(category.name, naira(category.value)));
-
-      heading(kind === "daily" ? "Today's activity" : "The week's activity");
-      if (kind === "daily") {
-        text(`• Register: ${brief.present} present, ${brief.late} late, ${brief.absent} absent, ${brief.excused} excused across ${new Set(data.attendance.filter((r) => r.date === brief.latestRegister).map((r) => `${r.className} ${r.arm}`)).size} classes.`);
-        text(`• Bursary: ${brief.paidToday.length} confirmed payment(s); ${brief.pending.length} transfer(s) awaiting review.`);
-        brief.spentToday.slice(0, 4).forEach((expense: Expense) => text(`• Spent: ${expense.description} — ${naira(expense.amount)} (${expense.category}).`));
-        text(`• Admissions: ${brief.thisWeek.applications} new application(s) this week; ${data.applications.filter((a) => a.status === "OFFER_MADE").length} offer(s) with parents.`);
-      } else {
-        text(`• Registers closed: ${brief.thisWeek.registers} class-registers against ${brief.lastWeek.registers} last week.`);
-        text(`• New applications: ${brief.thisWeek.applications} (last week ${brief.lastWeek.applications}). Broadcasts sent: ${brief.thisWeek.messages}. Events held: ${brief.thisWeek.events}.`);
-        brief.academicDepartments.forEach((department) =>
-          text(`• ${department.name}: ${department.roll} pupils, ${department.rate}% in school today, ${department.feesRate}% of their fees paid.`),
-        );
-      }
-
-      heading("For your attention");
-      brief.attention.forEach((item) => text(`• ${item.text}`));
-
-      ensure(40);
-      y += 8;
-      doc.setDrawColor(220, 220, 220);
-      doc.setLineWidth(0.6);
-      doc.line(margin, y, width - margin, y);
-      y += 14;
-      text(`Generated by UPWA-ISMS, President's Office · ${settings.session}, ${termLabel(settings.currentTerm)} · delivery: ${settings.presidentEmail} (daily 4:00 PM, weekly Fridays 6:00 PM).`, 8.5, "italic", [140, 140, 140]);
-
-      doc.save(`UPWA-President-${kind === "daily" ? "Daily-Brief" : "Weekly-Report"}-${brief.today}.pdf`);
+      const { filename, arrayBuffer } = await buildPresidentPdf(data, kind);
+      const url = URL.createObjectURL(new Blob([arrayBuffer], { type: "application/pdf" }));
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
       notify(kind === "daily" ? "Daily brief downloaded" : "Weekly report downloaded", "success", `PDF saved — a copy goes to ${settings.presidentEmail} on schedule.`);
     } catch (error) {
       notify("Could not build the PDF", "danger", String((error as Error).message));
@@ -489,13 +188,45 @@ export function PresidentWorkspace() {
     }
   }
 
-  function emailNow(kind: "daily" | "weekly") {
-    setManualSends((current) => [...current, { kind, at: new Date() }]);
-    notify(
-      kind === "daily" ? "Daily brief sent" : "Weekly report sent",
-      "success",
-      `PDF on its way to ${settings.presidentEmail}.`,
-    );
+  /** Sends the brief as a real email through the school's mail provider (Resend). */
+  async function emailNow(kind: "daily" | "weekly") {
+    if (!data) return;
+    setBuilding(kind);
+    try {
+      const { filename, subject, cover, arrayBuffer } = await buildPresidentPdf(data, kind);
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      const response = await fetch("/api/president/dispatch", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind, filename, subject, cover, pdfBase64: btoa(binary) }),
+      });
+      const result = (await response.json().catch(() => ({}))) as { configured?: boolean; delivered?: boolean; to?: string[]; error?: string };
+      if (response.ok && result.delivered) {
+        setManualSends((current) => [...current, { kind, at: new Date(), channel: "provider" }]);
+        notify("Delivered by email", "success", `${subject} → ${result.to?.join(", ") ?? settings.presidentEmail}, with the PDF attached.`);
+      } else if (response.status === 503 || result.configured === false) {
+        const url = URL.createObjectURL(new Blob([arrayBuffer], { type: "application/pdf" }));
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = filename;
+        anchor.click();
+        URL.revokeObjectURL(url);
+        setManualSends((current) => [...current, { kind, at: new Date(), channel: "local" }]);
+        notify(
+          "Mail provider not connected yet",
+          "info",
+          "The PDF was saved here instead. Set RESEND_API_KEY and PRESIDENT_FROM_EMAIL in the Vercel environment and this button emails it directly.",
+        );
+      } else {
+        notify("Delivery failed", "danger", result.error ?? `The mail service answered ${response.status}.`);
+      }
+    } catch (error) {
+      notify("Delivery failed", "danger", String((error as Error).message));
+    } finally {
+      setBuilding("");
+    }
   }
 
   const topSpends = [...data.expenses].sort((a, b) => b.date.localeCompare(a.date) || b.amount - a.amount).slice(0, 7);
@@ -874,8 +605,25 @@ export function PresidentWorkspace() {
               <Button variant="ghost" size="sm" className="!border !border-white/25 !bg-white/10 !text-white hover:!bg-white/20" icon={<FileDown size={15} />} onClick={() => downloadPdf("daily")} disabled={building !== ""}>
                 {building === "daily" ? "Building…" : "Today's brief PDF"}
               </Button>
-              <Button variant="ghost" size="sm" className="!border !border-white/25 !bg-white/10 !text-white hover:!bg-white/20" icon={<Send size={15} />} onClick={() => emailNow("weekly")}>
-                Email it now
+              <Button
+                variant="ghost"
+                size="sm"
+                className="!border !border-white/25 !bg-white/10 !text-white hover:!bg-white/20"
+                icon={<Send size={15} />}
+                onClick={() => emailNow("daily")}
+                disabled={building !== ""}
+              >
+                {building === "daily" ? "Sending…" : "Email today's brief"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="!border !border-white/25 !bg-white/10 !text-white hover:!bg-white/20"
+                icon={<Send size={15} />}
+                onClick={() => emailNow("weekly")}
+                disabled={building !== ""}
+              >
+                {building === "weekly" ? "Sending…" : "Email the weekly report"}
               </Button>
             </div>
           </div>
@@ -936,10 +684,14 @@ export function PresidentWorkspace() {
                   <li key={`${send.at.getTime()}-${index}`} className="flex items-center gap-3 rounded-xl border border-upwa-orange-400/30 bg-upwa-orange-500/10 px-3.5 py-2.5">
                     <Mail size={15} className="shrink-0 text-upwa-orange-400" />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-semibold text-white">{send.kind === "weekly" ? "Weekly report" : "Daily brief"} sent on request</p>
-                      <p className="truncate text-[10px] text-slate-400">{settings.presidentEmail} · just now</p>
+                      <p className="truncate text-xs font-semibold text-white">
+                        {send.kind === "weekly" ? "Weekly report" : "Daily brief"} {send.channel === "provider" ? "emailed on request" : "requested — saved locally"}
+                      </p>
+                      <p className="truncate text-[10px] text-slate-400">
+                        {settings.presidentEmail} · {send.channel === "provider" ? "delivered by the school's mail provider" : "no mail provider connected yet"}
+                      </p>
                     </div>
-                    <Badge tone="orange">Sent</Badge>
+                    <Badge tone={send.channel === "provider" ? "green" : "orange"}>{send.channel === "provider" ? "Sent" : "Saved"}</Badge>
                   </li>
                 ))}
               </ul>
@@ -951,7 +703,8 @@ export function PresidentWorkspace() {
       <p className="px-1 text-[11px] leading-5 text-slate-500">
         Every figure above is drawn live from the school&apos;s own registers, bursary ledger and office records for {settings.session},{" "}
         {termLabel(settings.currentTerm)}. Nothing on this page can be edited — when the school team updates a register, confirms a transfer or logs an
-        application, this brief rewrites itself.
+        application, this brief rewrites itself. The two PDFs are mailed on their own schedule by the school&apos;s report service — the buttons above send
+        the copy you are looking at, whenever you ask for it.
       </p>
     </div>
   );

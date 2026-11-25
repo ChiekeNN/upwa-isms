@@ -267,6 +267,22 @@ This is a code/migration inventory, not a production-readiness certification. A 
 | Public CMS | Public content APIs and a basic website content workflow exist. | Complete reviewed publishing for categories, galleries/groups, testimonials/groups, and richer public page management. |
 | Settings/integrations | REST route handlers, CSV-oriented import, webhooks, report verification, and selected provider adapters exist. | Add the settings/layout experience, XLSX import/export, additional contracted gateways, integration health/logging, and complete integration/security tests. |
 
+### President's Office report delivery
+
+The President's Office (`/portal#president`) produces two PDF reports from the school's registers, bursary ledger and office records: the close-of-work daily brief (weekdays, 4:00 PM) and the comprehensive weekly report (Fridays, 6:00 PM), both West Africa Time.
+
+| Piece | Path | What it does |
+| --- | --- | --- |
+| Report computation | `src/app/portal/demo/president-brief.ts` | Single source of truth for every figure. The dashboard, the PDFs and the emails all read it, so screen and inbox cannot disagree. |
+| PDF builder | `src/app/portal/demo/president-pdf.ts` | Builds the A4 brief (also the email body text). Embeds a subsetted Unicode face (`president-font.ts`) because jsPDF's built-in Helvetica uses WinAnsiEncoding and cannot encode ₦. |
+| Delivery helper | `src/lib/president/reports.ts` | Resend send with attachment, idempotency key, size guard, and the locked recipient list. |
+| On-request send | `POST /api/president/dispatch` | Mails the copy the browser has open. Requires `RESEND_API_KEY` and `PRESIDENT_FROM_EMAIL`; answers 503 when unconfigured, and the portal then saves the PDF locally and says so. |
+| Scheduled send | `GET /api/cron/president-report?kind=daily\|weekly` | Guarded by `CRON_SECRET` (timing-safe bearer), registered in `vercel.json` at `0 15 * * 1-5` and `0 17 * * 5` UTC. |
+
+Recipients come only from `PRESIDENT_REPORT_TO` (default `chiekenn@gmail.com`); no request body can redirect a report, so the endpoints cannot be used as a relay. A best-effort per-instance throttle caps on-request sends.
+
+Unlike `api/cron/morning-brief`, this route needs no database. The demonstration ledger is rebuilt deterministically on the server (`buildDemoData` rewinds its PRNG, so a server build matches the browser's to the naira), which keeps the demo portal free of Supabase and away from the school's real records. Delivery history is shown in the portal's own delivery panel rather than persisted. When these reports move onto live data, they should adopt the `executive_brief_schedules` / `executive_brief_runs` persistence the morning brief already uses.
+
 ### Production migration gate
 
 The latest Supabase migration-history check found only the first four repository migrations recorded in production. Read-only checks also confirmed representative tables from both later migrations are absent (`assessment_batches`, `finance_activity`, `communication_preferences`, `notification_outbox`, and `payment_evidence`). The following repository migrations were not recorded at that check:

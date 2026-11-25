@@ -53,7 +53,9 @@ function mulberry32(seed: number) {
   };
 }
 
-const rand = mulberry32(20261125);
+const DEMO_SEED = 20261125;
+/** Shared stream. `buildDemoData` rewinds it, so every build is identical to the first. */
+let rand = mulberry32(DEMO_SEED);
 
 function pick<T>(items: readonly T[]): T {
   return items[Math.floor(rand() * items.length) % items.length];
@@ -758,6 +760,9 @@ function buildSettings(session: string, term: TermCode): DemoSettings {
 /* ------------------------------- assembler ------------------------------- */
 
 export function buildDemoData(today = new Date()): DemoData {
+  // Rewind the deterministic stream: the portal seeds once in the browser, while
+  // scheduled report delivery rebuilds on the server. Both must agree to the naira.
+  rand = mulberry32(DEMO_SEED);
   const { session, term } = academicContext(today);
   const sessionStartYear = Number(session.split("/")[0]);
 

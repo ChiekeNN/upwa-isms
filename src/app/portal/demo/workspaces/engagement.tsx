@@ -698,7 +698,7 @@ export function SettingsWorkspace() {
             <p className="mt-0.5 text-xs text-slate-500">Where the President&apos;s PDF briefs are delivered, and when.</p>
           </div>
           <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-panel">
-            <Field label="President's report email" hint="The daily close-of-work brief (4:00 PM, workdays) and the weekly comprehensive report (Fridays, 6:00 PM) are generated as PDFs and delivered here.">
+            <Field label="President's report email" hint="The daily close-of-work brief (4:00 PM, workdays) and the weekly comprehensive report (Fridays, 6:00 PM) are generated as PDFs and mailed to the address on file. This demonstration records the address here and prints it on the report footer; the school's mail service sends to the recipient its administrator has configured, so the two are kept apart by design.">
               <div className="flex flex-wrap gap-2.5">
                 <input
                   type="email"
@@ -717,7 +717,7 @@ export function SettingsWorkspace() {
                       return;
                     }
                     updateSettings({ presidentEmail: next });
-                    notify("Report delivery updated", "success", `President's briefs now go to ${next}.`);
+                    notify("Report address saved", "success", `The portal and the report footer now show ${next}. Live mail still goes to the recipient configured on the school's mail service.`);
                   }}
                 >
                   Save address
