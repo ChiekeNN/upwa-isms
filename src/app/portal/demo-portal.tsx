@@ -227,7 +227,7 @@ function WorkspaceShell() {
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-upwa-orange-500 text-xs font-bold text-upwa-midnight">NO</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-white">Mrs. Ndidi Okeke</p>
+            <p className="truncate text-xs font-semibold text-white">Mrs. Chinwe Chike</p>
             <p className="truncate text-[10px] text-slate-400">Head Teacher · full access</p>
           </div>
           <button type="button" onClick={reset} aria-label="Reset demonstration data" title="Reset demonstration data" className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-white/10 hover:text-white">
