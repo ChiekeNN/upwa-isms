@@ -741,7 +741,7 @@ export function ResultsWorkspace() {
                   ? "An acceptable result. Greater effort is needed next term."
                   : "This result requires serious attention. Parents should meet the Head Teacher."}
             </p>
-            <p className="mt-3 text-xs font-semibold text-upwa-navy">Mrs. Ndidi Okeke</p>
+            <p className="mt-3 text-xs font-semibold text-upwa-navy">Mrs. Chinwe Chike</p>
             <p className="text-[11px] text-slate-500">Head Teacher · signed electronically</p>
           </div>
         </div>

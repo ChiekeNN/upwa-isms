@@ -160,7 +160,7 @@ export function OverviewWorkspace({ onNavigate }: { onNavigate: (key: string) =>
               {termLabel(settings.currentTerm)} · {settings.session}
             </p>
             <h2 className="mt-3 font-display text-2xl font-bold leading-tight sm:text-3xl">
-              Good day, Mrs. Okeke
+              Good day, Mrs. Chinwe Chike
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-300">
               {metrics.active.length} pupils are on roll today across {metrics.enrolmentByClass.length} classes.
