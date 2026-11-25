@@ -441,7 +441,86 @@ export default async function HomePage() {
           </div>
 
           {/* Bottom fade into the page */}
-          <div aria-hidden="true" className="h-16 bg-gradient-to-b from-transparent to-upwa-canvas lg:h-20" />
+          <div aria-hidden="true" className="h-16 bg-gradient-to-b from-transparent to-upwa-ivory lg:h-20" />
+        </section>
+
+        {/* ======================= PRESIDENT'S WELCOME ====================== */}
+        <section id="welcome" className="surface-ivory relative scroll-mt-32 overflow-hidden px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+          <Quote aria-hidden="true" className="pointer-events-none absolute -right-10 top-10 h-56 w-56 rotate-180 text-upwa-orange-500/[0.07]" />
+          <div className="mx-auto max-w-7xl">
+            <div className="grid items-start gap-14 lg:grid-cols-12 lg:gap-16">
+              {/* Portrait */}
+              <Reveal className="lg:col-span-5">
+                <figure className="relative mx-auto max-w-md lg:max-w-none">
+                  <div aria-hidden="true" className="absolute -left-4 -top-4 h-full w-full rounded-[2rem] border-2 border-upwa-orange-500/40" />
+                  <div className="relative overflow-hidden rounded-[2rem] shadow-lift ring-1 ring-upwa-navy/10">
+                    <Image
+                      src="/dr-chinwe-chike.jpg"
+                      alt="Dr. Chinwe Chike, President of the University of Port Harcourt Women Association"
+                      width={1024}
+                      height={1024}
+                      sizes="(min-width: 1024px) 38vw, 92vw"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <figcaption className="relative z-10 mx-5 -mt-14 rounded-2xl bg-upwa-navy px-6 py-5 text-white shadow-panel-lg sm:mx-8">
+                    <p className="font-display text-lg font-bold">Dr. Chinwe Chike</p>
+                    <p className="mt-1 text-[11px] font-bold uppercase tracking-brand text-upwa-orange-400">
+                      President, University of Port Harcourt Women Association
+                    </p>
+                    <p className="mt-2 text-xs leading-5 text-slate-300">
+                      UPWA International Group of Schools · Choba, Rivers State
+                    </p>
+                  </figcaption>
+                </figure>
+              </Reveal>
+
+              {/* Welcome message */}
+              <div className="lg:col-span-7">
+                <Reveal>
+                  <SectionHeading
+                    eyebrow="A welcome from the President"
+                    title="Welcome to our family of schools"
+                    lede="Dr. Chinwe Chike, President of the University of Port Harcourt Women Association, on the promise UPWA International Group of Schools makes to every family."
+                  />
+                </Reveal>
+                <Reveal delay={90}>
+                  <blockquote className="relative mt-9">
+                    <div className="space-y-5 border-l-2 border-upwa-orange-500/60 pl-6 text-base leading-8 text-slate-700 sm:pl-8 sm:text-lg sm:leading-9">
+                      <p>
+                        When the women of our association opened a small crèche on this campus, we held one conviction
+                        above all others: that a child learns best where they are loved like family. That conviction is
+                        still the foundation of everything you see today — from the first wobbly steps in our Crèche to
+                        the senior secondary pioneers who have since graduated into the world.
+                      </p>
+                      <p>
+                        Our schools have grown, but they have never grown distant. Our teachers know every pupil by
+                        name, our doors remain open to every parent, and every decision we make begins with the same
+                        question: what is best for the child standing before us?
+                      </p>
+                      <p>
+                        So whether you are entrusting us with your first child or joining us midway through their
+                        journey, I welcome you warmly — and I give you my personal promise: we will guard your
+                        child&apos;s dreams with the same hands we guard our own. Creativity unto greatness, for
+                        excellent.
+                      </p>
+                    </div>
+                  </blockquote>
+                </Reveal>
+                <Reveal delay={160}>
+                  <div className="mt-9 flex items-center gap-4 pl-6 sm:pl-8">
+                    <span className="ornament-rule block w-10" aria-hidden="true" />
+                    <div>
+                      <p className="font-display text-xl font-bold text-upwa-navy">Dr. Chinwe Chike</p>
+                      <p className="mt-0.5 text-xs font-semibold uppercase tracking-brand text-slate-500">
+                        President, UPWA International Group of Schools
+                      </p>
+                    </div>
+                  </div>
+                </Reveal>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* ============================= ABOUT ============================= */}
