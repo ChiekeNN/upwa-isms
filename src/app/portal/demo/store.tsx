@@ -25,7 +25,7 @@ import type { CollectionKey, DemoData, EntityOf } from "./types";
  */
 
 const STORAGE_KEY = "upwa-isms:demo-portal";
-const STORAGE_VERSION = 3;
+const STORAGE_VERSION = 4;
 
 const ID_PREFIX: Record<CollectionKey, string> = {
   students: "stu",
@@ -39,6 +39,7 @@ const ID_PREFIX: Record<CollectionKey, string> = {
   applications: "adm",
   events: "evt",
   messages: "msg",
+  expenses: "exp",
 };
 
 export type Toast = {

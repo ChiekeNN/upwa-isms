@@ -9,6 +9,7 @@ import {
   type ClassArm,
   type DemoData,
   type DemoSettings,
+  type Expense,
   type Gender,
   type Guardian,
   type House,
@@ -562,6 +563,60 @@ function buildPayments(invoices: Invoice[], students: Student[], settings: DemoS
   return payments;
 }
 
+/**
+ * The school's spending ledger for the term: recurring payroll, feeding,
+ * utilities and contracts on their usual days of the month, plus the
+ * one-off purchases a term actually contains. Deterministic by design so
+ * the President's briefs tell the same story on every visit.
+ */
+function buildExpenses(settings: DemoSettings, today: Date): Expense[] {
+  const rows: Omit<Expense, "id">[] = [];
+  const bursar = "Mrs. Grace Ameh (Bursar)";
+  const president = "Dr. Chinwe Chike (President)";
+  const cursor = new Date(`${settings.termStartDate}T09:00:00`);
+  while (cursor <= today) {
+    const day = cursor.getDate();
+    const iso = cursor.toISOString().slice(0, 10);
+    if (day === 25) {
+      rows.push({ date: iso, category: "Salaries & wages", description: "Monthly payroll — 16 staff (salaries, PAYE & pension)", department: "Whole school", paidTo: "Staff bank accounts — bulk transfer", amount: 1_540_000, method: "BANK_TRANSFER", approvedBy: president });
+    }
+    if (day === 3) {
+      rows.push({ date: iso, category: "ICT & platform", description: "Starlink business line — office, library & ICT lab", department: "ICT & Platform", paidTo: "Starlink Nigeria", amount: 45_000, method: "PAYSTACK", approvedBy: bursar });
+    }
+    if (day === 5) {
+      rows.push({ date: iso, category: "Utilities", description: "Borehole servicing & water treatment", department: "Whole school", paidTo: "Choba water services", amount: 32_000, method: "CASH_BURSARY", approvedBy: bursar });
+    }
+    if (day === 10) {
+      rows.push({ date: iso, category: "Utilities", description: "PHED prepaid meters — all blocks", department: "Whole school", paidTo: "Port Harcourt Electricity Distribution", amount: cursor.getMonth() === 10 ? 138_000 : 96_000, method: "BANK_TRANSFER", approvedBy: bursar });
+    }
+    if (day === 12) {
+      rows.push({ date: iso, category: "ICT & platform", description: "Paystack gateway charges on fee collections", department: "Bursary", paidTo: "Paystack Nigeria", amount: 26_500, method: "PAYSTACK", approvedBy: bursar });
+    }
+    if (day === 15) {
+      rows.push({ date: iso, category: "Security & cleaning", description: "Security & cleaning contract — Choba campus", department: "Whole school", paidTo: "Shield & Shine facility services", amount: 60_000, method: "BANK_TRANSFER", approvedBy: bursar });
+    }
+    if (cursor.getDay() === 1) {
+      rows.push({ date: iso, category: "Feeding & kitchen", description: "Weekly market run — feeding plan (Mile 3)", department: "Early Years", paidTo: "Mile 3 market suppliers", amount: 104_000, method: "CASH_BURSARY", approvedBy: bursar });
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  const oneOffs: Omit<Expense, "id">[] = [
+    { date: `${settings.termStartDate.slice(0, 4)}-09-14`, category: "Maintenance & facilities", description: "Classroom repainting — Primary block", department: "Primary", paidTo: "Obio-Akpor paints & works", amount: 180_000, method: "BANK_TRANSFER", approvedBy: president },
+    { date: `${settings.termStartDate.slice(0, 4)}-09-21`, category: "Learning materials", description: "NERDC workbooks & chart packs — Primary", department: "Primary", paidTo: "UPL educational supplies", amount: 96_500, method: "BANK_TRANSFER", approvedBy: bursar },
+    { date: `${settings.termStartDate.slice(0, 4)}-09-30`, category: "Events & welfare", description: "Independence Day celebration — decorations & refreshments", department: "Whole school", paidTo: "Choba caterers' cooperative", amount: 74_000, method: "CASH_BURSARY", approvedBy: bursar },
+    { date: `${settings.termStartDate.slice(0, 4)}-10-16`, category: "Transport & trips", description: "Excursion bus hire — JSS 2 to Port Harcourt Museum", department: "Junior Secondary", paidTo: "Amino bus services", amount: 120_000, method: "BANK_TRANSFER", approvedBy: president },
+    { date: `${settings.termStartDate.slice(0, 4)}-10-22`, category: "Maintenance & facilities", description: "Generator service & oil change", department: "Whole school", paidTo: "Cummins dealer, Trans-Amadi", amount: 85_000, method: "BANK_TRANSFER", approvedBy: bursar },
+    { date: `${settings.termStartDate.slice(0, 4)}-11-06`, category: "Learning materials", description: "WAEC past questions & mock papers — SSS 3", department: "Senior Secondary", paidTo: "WAEC prep press", amount: 58_000, method: "PAYSTACK", approvedBy: bursar },
+    { date: `${settings.termStartDate.slice(0, 4)}-11-12`, category: "Medical & safety", description: "First-aid restock & eye-screening supplies", department: "Student Welfare", paidTo: "Choba pharmacy", amount: 41_500, method: "CASH_BURSARY", approvedBy: bursar },
+    { date: iso(today), category: "Feeding & kitchen", description: "Kitchen provisions top-up — feeding plan", department: "Early Years", paidTo: "Mile 3 market suppliers", amount: 38_500, method: "CASH_BURSARY", approvedBy: bursar },
+  ];
+  rows.push(...oneOffs.filter((row) => row.date >= settings.termStartDate && row.date <= iso(today)));
+
+  rows.sort((a, b) => a.date.localeCompare(b.date));
+  return rows.map((row, index) => ({ id: `exp-${pad(index + 1, 3)}`, ...row }));
+}
+
 function buildApplications(session: string): AdmissionApplication[] {
   const seeds: [string, string, Gender, SchoolClass, string, string, string, ApplicationStatus, string, string][] = [
     ["Amarachi", "Nnenna", "FEMALE", "Nursery 1", "Mrs. Nnenna Obi", "0803 774 2210", "nnenna.obi@gmail.com", "EXAM_SCHEDULED", "Little Angels Nursery, Rumuigbo", "Parent requested the morning feeding plan."],
@@ -676,6 +731,8 @@ function buildSettings(session: string, term: TermCode): DemoSettings {
     caMax: 20,
     examMax: 60,
     attendanceTarget: 92,
+    presidentEmail: "chiekenn@gmail.com",
+    openingBalance: 3_400_000,
     grading: [
       { min: 75, grade: "A1", remark: "Excellent" },
       { min: 70, grade: "B2", remark: "Very good" },
@@ -717,6 +774,7 @@ export function buildDemoData(today = new Date()): DemoData {
   const applications = buildApplications(session);
   const events = buildEvents(settings, today).sort((a, b) => a.date.localeCompare(b.date));
   const messages = buildMessages(today);
+  const expenses = buildExpenses(settings, today);
 
   return {
     students,
@@ -730,6 +788,7 @@ export function buildDemoData(today = new Date()): DemoData {
     applications,
     events,
     messages,
+    expenses,
     settings,
   };
 }

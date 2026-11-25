@@ -20,6 +20,7 @@ import {
   Badge,
   Button,
   Card,
+  Field,
   CardHeader,
   ConfirmDialog,
   DataTable,
@@ -619,9 +620,11 @@ export function SettingsWorkspace() {
   const [editingBand, setEditingBand] = useState<number | null>(null);
   const [bandValues, setBandValues] = useState<FormValues>({});
   const [confirmReset, setConfirmReset] = useState(false);
+  const [presidentEmailDraft, setPresidentEmailDraft] = useState("");
 
   const settings = data?.settings;
   if (!data || !settings) return null;
+  const emailDraft = presidentEmailDraft || settings.presidentEmail;
 
   const profileValues: FormValues = Object.keys(profile).length
     ? profile
@@ -691,6 +694,43 @@ export function SettingsWorkspace() {
       <Card padded={false}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
           <div>
+            <h3 className="font-display text-base font-bold text-upwa-navy">President&apos;s reports</h3>
+            <p className="mt-0.5 text-xs text-slate-500">Where the President&apos;s PDF briefs are delivered, and when.</p>
+          </div>
+          <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-panel">
+            <Field label="President's report email" hint="The daily close-of-work brief (4:00 PM, workdays) and the weekly comprehensive report (Fridays, 6:00 PM) are generated as PDFs and delivered here.">
+              <div className="flex flex-wrap gap-2.5">
+                <input
+                  type="email"
+                  value={emailDraft}
+                  onChange={(event) => setPresidentEmailDraft(event.target.value)}
+                  className={`${inputClass} flex-1`}
+                  placeholder="president@upwaschools.ng"
+                />
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    const next = emailDraft.trim();
+                    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(next)) {
+                      notify("That email does not look right", "danger", "Use a full address like name@school.ng.");
+                      return;
+                    }
+                    updateSettings({ presidentEmail: next });
+                    notify("Report delivery updated", "success", `President's briefs now go to ${next}.`);
+                  }}
+                >
+                  Save address
+                </Button>
+              </div>
+            </Field>
+            <ul className="space-y-2 text-xs leading-5 text-slate-600">
+              <li className="flex gap-2"><span className="font-bold text-upwa-navy">Daily:</span> close-of-work summary of attendance, money in and out, admissions and welfare — every workday at 4:00 PM.</li>
+              <li className="flex gap-2"><span className="font-bold text-upwa-navy">Weekly:</span> the comprehensive report with week-on-week comparisons and every department's position — Fridays at 6:00 PM.</li>
+            </ul>
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
             <h3 className="font-display text-base font-bold text-upwa-navy">Grading scheme</h3>
             <p className="mt-0.5 text-xs text-slate-500">
               Nigerian secondary-school style bands. CA is out of {settings.caMax} each and the examination out of {settings.examMax}, totalling {settings.caMax * 2 + settings.examMax}.
