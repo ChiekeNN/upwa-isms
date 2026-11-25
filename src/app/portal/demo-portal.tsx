@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   Bell,
   BookMarked,
+  Crown,
   CalendarCheck,
   CalendarDays,
   ChevronRight,
@@ -31,6 +32,7 @@ import {
 import { DemoProvider, useDemo } from "./demo/store";
 import { Badge, Button, ToastStack } from "./demo/ui";
 import { OverviewWorkspace } from "./demo/workspaces/overview";
+import { PresidentWorkspace } from "./demo/workspaces/president";
 import { AdmissionsWorkspace, GuardiansWorkspace, StaffWorkspace, StudentsWorkspace } from "./demo/workspaces/people";
 import { AttendanceWorkspace, GradebookWorkspace, ResultsWorkspace } from "./demo/workspaces/academics";
 import { FinanceWorkspace } from "./demo/workspaces/finance";
@@ -38,6 +40,7 @@ import { CalendarWorkspace, CommunicationsWorkspace, SettingsWorkspace, Subjects
 import { termLabel } from "./demo/format";
 
 type ModuleKey =
+  | "president"
   | "overview"
   | "students"
   | "guardians"
@@ -53,6 +56,7 @@ type ModuleKey =
   | "settings";
 
 const MODULES: { key: ModuleKey; label: string; group: string; icon: typeof Users; blurb: string }[] = [
+  { key: "president", label: "President's Office", group: "President's Office", icon: Crown, blurb: "Dr. Chike's read-only brief: the whole school in plain words — money in and out, every department, and what needs her eye. PDFs daily at 4:00 PM and Fridays at 6:00 PM." },
   { key: "overview", label: "Overview", group: "Dashboard", icon: LayoutDashboard, blurb: "Today's snapshot of enrolment, attendance, fees and admissions." },
   { key: "students", label: "Pupils", group: "People", icon: Users, blurb: "The pupil register: enrol, edit, view the full record and withdraw." },
   { key: "guardians", label: "Parents & guardians", group: "People", icon: HeartHandshake, blurb: "Contact records used for broadcasts, pickup and fee reminders." },
@@ -68,9 +72,10 @@ const MODULES: { key: ModuleKey; label: string; group: string; icon: typeof User
   { key: "settings", label: "Settings", group: "Administration", icon: Settings2, blurb: "Session, term dates, grading scheme and demonstration controls." },
 ];
 
-const GROUPS = ["Dashboard", "People", "Academics", "Bursary", "Engagement", "Administration"];
+const GROUPS = ["President's Office", "Dashboard", "People", "Academics", "Bursary", "Engagement", "Administration"];
 
 const GROUP_ICON: Record<string, typeof Users> = {
+  "President's Office": Crown,
   Dashboard: LayoutDashboard,
   People: Users,
   Academics: GraduationCap,
@@ -133,6 +138,8 @@ function WorkspaceShell() {
 
   function renderWorkspace() {
     switch (active) {
+      case "president":
+        return <PresidentWorkspace />;
       case "students":
         return <StudentsWorkspace />;
       case "guardians":

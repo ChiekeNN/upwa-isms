@@ -261,6 +261,34 @@ export type DemoSettings = {
   examMax: number;
   fees: FeeStructureRow[];
   attendanceTarget: number;
+  /** Where the President's daily and weekly PDF briefs are delivered. */
+  presidentEmail: string;
+  /** Money in the school account on the first day of term. */
+  openingBalance: number;
+};
+
+export type ExpenseCategory =
+  | "Salaries & wages"
+  | "Feeding & kitchen"
+  | "Utilities"
+  | "Maintenance & facilities"
+  | "Learning materials"
+  | "ICT & platform"
+  | "Transport & trips"
+  | "Events & welfare"
+  | "Security & cleaning"
+  | "Medical & safety";
+
+export type Expense = {
+  id: string;
+  date: string;
+  category: ExpenseCategory;
+  description: string;
+  department: string;
+  paidTo: string;
+  amount: number;
+  method: PaymentMethod;
+  approvedBy: string;
 };
 
 export type DemoData = {
@@ -275,6 +303,7 @@ export type DemoData = {
   applications: AdmissionApplication[];
   events: SchoolEvent[];
   messages: Message[];
+  expenses: Expense[];
   settings: DemoSettings;
 };
 
