@@ -26,6 +26,7 @@ import {
   type Subject,
   type TermCode,
 } from "./types";
+import { buildIntegrityRecords } from "./seed-integrity";
 
 /**
  * Synthetic demonstration dataset for the UPWA-ISMS portal preview.
@@ -330,7 +331,7 @@ function buildStaff(): Staff[] {
     phone,
     email: `${firstName.toLowerCase()}.${lastName.toLowerCase().replace(/[^a-z]/g, "")}@upwaschools.ng`,
     employmentDate: `${2016 + (index % 9)}-01-${pad(between(9, 20), 2)}`,
-    status: index === 15 ? ("ON_LEAVE" as const) : ("ACTIVE" as const),
+    status: index === 15 ? ("ON_LEAVE" as const) : index === 13 ? ("RESIGNED" as const) : ("ACTIVE" as const),
   }));
 }
 
@@ -592,7 +593,7 @@ function buildExpenses(settings: DemoSettings, today: Date): Expense[] {
       rows.push({ date: iso, category: "Utilities", description: "PHED prepaid meters — all blocks", department: "Whole school", paidTo: "Port Harcourt Electricity Distribution", amount: cursor.getMonth() === 10 ? 138_000 : 96_000, method: "BANK_TRANSFER", approvedBy: bursar });
     }
     if (day === 12) {
-      rows.push({ date: iso, category: "ICT & platform", description: "Paystack gateway charges on fee collections", department: "Bursary", paidTo: "Paystack Nigeria", amount: 26_500, method: "PAYSTACK", approvedBy: bursar });
+      rows.push({ date: iso, category: "ICT & platform", description: "Paystack gateway charges on fee collections", department: "ICT & Platform", paidTo: "Paystack Nigeria", amount: 26_500, method: "PAYSTACK", approvedBy: bursar });
     }
     if (day === 15) {
       rows.push({ date: iso, category: "Security & cleaning", description: "Security & cleaning contract — Choba campus", department: "Whole school", paidTo: "Shield & Shine facility services", amount: 60_000, method: "BANK_TRANSFER", approvedBy: bursar });
@@ -612,6 +613,19 @@ function buildExpenses(settings: DemoSettings, today: Date): Expense[] {
     { date: `${settings.termStartDate.slice(0, 4)}-11-06`, category: "Learning materials", description: "WAEC past questions & mock papers — SSS 3", department: "Senior Secondary", paidTo: "WAEC prep press", amount: 58_000, method: "PAYSTACK", approvedBy: bursar },
     { date: `${settings.termStartDate.slice(0, 4)}-11-12`, category: "Medical & safety", description: "First-aid restock & eye-screening supplies", department: "Student Welfare", paidTo: "Choba pharmacy", amount: 41_500, method: "CASH_BURSARY", approvedBy: bursar },
     { date: iso(today), category: "Feeding & kitchen", description: "Kitchen provisions top-up — feeding plan", department: "Early Years", paidTo: "Mile 3 market suppliers", amount: 38_500, method: "CASH_BURSARY", approvedBy: bursar },
+
+    /* --- the failures the President's controls exist to catch --- */
+    // Paid before anybody authorised it.
+    { date: iso(addDays(today, -1)), category: "Maintenance & facilities", description: "Generator overhaul — claimed as urgent", department: "Whole school", paidTo: "Cummins dealer, Trans-Amadi", amount: 265_000, method: "BANK_TRANSFER", approvedBy: "Not approved — paid before authorisation" },
+    { date: iso(addDays(today, -3)), category: "Transport & trips", description: "Emergency diesel for the school bus", department: "Whole school", paidTo: "Choba filling station", amount: 45_000, method: "CASH_BURSARY", approvedBy: "Not approved — paid before authorisation" },
+    // One ₦255,000 purchase, cut into three so each stays under the approval limit.
+    { date: iso(addDays(today, -9)), category: "Maintenance & facilities", description: "Plumbing materials — block C", department: "Whole school", paidTo: "Choba hardware & supplies", amount: 85_000, method: "BANK_TRANSFER", approvedBy: bursar },
+    { date: iso(addDays(today, -7)), category: "Maintenance & facilities", description: "Electrical materials — block C", department: "Whole school", paidTo: "Choba hardware & supplies", amount: 85_000, method: "BANK_TRANSFER", approvedBy: bursar },
+    { date: iso(addDays(today, -5)), category: "Maintenance & facilities", description: "Painting materials — block C", department: "Whole school", paidTo: "Choba hardware & supplies", amount: 85_000, method: "BANK_TRANSFER", approvedBy: bursar },
+    // The same contract paid twice inside a fortnight.
+    { date: iso(addDays(today, -8)), category: "Security & cleaning", description: "Security & cleaning contract — Choba campus (re-run)", department: "Whole school", paidTo: "Shield & Shine facility services", amount: 60_000, method: "BANK_TRANSFER", approvedBy: bursar },
+    // Requested and approved by the same person.
+    { date: iso(addDays(today, -4)), category: "Learning materials", description: "Bursary consumables, printing & stationery", department: "Bursary", paidTo: "Delta stationers & prints", amount: 120_000, method: "BANK_TRANSFER", approvedBy: bursar },
   ];
   rows.push(...oneOffs.filter((row) => row.date >= settings.termStartDate && row.date <= iso(today)));
 
@@ -780,8 +794,10 @@ export function buildDemoData(today = new Date()): DemoData {
   const events = buildEvents(settings, today).sort((a, b) => a.date.localeCompare(b.date));
   const messages = buildMessages(today);
   const expenses = buildExpenses(settings, today);
+  const integrity = buildIntegrityRecords({ students, guardians, payments, expenses, staff, settings, today });
 
   return {
+    ...integrity,
     students,
     guardians,
     staff,

@@ -37,20 +37,43 @@ import {
   Wallet,
 } from "lucide-react";
 import { useDemo } from "../store";
-import { Badge, Button, Card, CardHeader } from "../ui";
+import { Badge, Button, Card, CardHeader, TabBar } from "../ui";
 import { compactNaira, formatDate, formatLongDate, naira, termLabel, weekdayOf } from "../format";
 import { computePresidentBrief, iso } from "../president-brief";
 import { buildPresidentPdf } from "../president-pdf";
+import { reconcileIncome, runIntegrityChecks } from "../integrity";
+import type { PresidentAction } from "../types";
+import {
+  ApprovalsView,
+  ControlHeadline,
+  DecisionTrail,
+  IntegrityView,
+  MoneyTrailView,
+  OversightView,
+  type ControlActions,
+} from "./president-controls";
 
 /**
  * The President's Office.
  *
- * Deliberately read-only: Dr. Chinwe Chike governs the school, she does not run
- * it. Everything here is assembled from the registers, the bursary ledger and
- * the office records, and expressed in plain language — what happened, what it
- * means, and what deserves her attention. The daily brief is prepared at the
- * close of work; the comprehensive report lands every Friday at 6:00 PM, and
- * both travel to her inbox as PDFs.
+ * She governs the school; she does not run it. Everything here is assembled from
+ * the registers, the bursary ledger and the office records, and expressed in plain
+ * language — what happened, what it means, and what deserves her attention.
+ *
+ * Six views sit behind the tabs. The command centre is the overview she reads in
+ * a minute; the money trail compares the bank's own feed with the bursary's
+ * ledger and the receipts parents were sent, so income cannot be hidden by simply
+ * not being written down; integrity & controls runs the whole control register;
+ * approvals is the queue that cannot be paid without her; concerns & audit holds
+ * the confidential line and every change made to the records; and her decisions
+ * is the trail this office leaves behind.
+ *
+ * She reads and decides — approve, refuse, question, flag, escalate, close — but
+ * never types into a ledger. A President who can quietly change a figure leaves
+ * nobody able to tell a correction from a cover-up.
+ *
+ * The daily brief is prepared at the close of work; the comprehensive report
+ * lands every Friday at 6:00 PM; both travel to her inbox as PDFs.
  */
 
 const CATEGORY_COLOURS: Record<string, string> = {
@@ -151,16 +174,22 @@ function Meter({ value, tone, caption }: { value: number; tone: string; caption:
   );
 }
 
+/** How her office is named on every record it touches, matching the seeded trail. */
+const PRESIDENT_OFFICE = "Dr. Chinwe Chike (President)";
+
 /* ================================= workspace ============================== */
 
 export function PresidentWorkspace() {
-  const { data, notify } = useDemo();
+  const { data, notify, create, update } = useDemo();
   const [manualSends, setManualSends] = useState<{ kind: "daily" | "weekly"; at: Date; channel: "provider" | "local" }[]>([]);
   const [building, setBuilding] = useState<"" | "daily" | "weekly">("");
+  const [tab, setTab] = useState<"command" | "money" | "integrity" | "approvals" | "oversight" | "decisions">("command");
 
   const brief = useMemo(() => (data ? computePresidentBrief(data) : null), [data]);
+  const summary = useMemo(() => (data ? runIntegrityChecks(data) : null), [data]);
+  const recon = useMemo(() => (data ? reconcileIncome(data) : null), [data]);
 
-  if (!data || !brief) {
+  if (!data || !brief || !summary || !recon) {
     return <p className="py-10 text-center text-sm text-slate-500">Preparing the President's brief…</p>;
   }
 
@@ -229,6 +258,88 @@ export function PresidentWorkspace() {
     }
   }
 
+  /**
+   * Her office decides; it does not type into the books. Every button below writes
+   * a PresidentAction (and, where the school team must act, a concern) so the
+   * decision itself is auditable — and the integrity score moves as she acts.
+   */
+  const controlActions: ControlActions = {
+    record(kind, targetType, targetId, summaryText, note, amount) {
+      create("presidentActions", {
+        kind,
+        targetType,
+        targetId,
+        summary: summaryText,
+        note: note ?? "",
+        amount: amount ?? null,
+        at: new Date().toISOString(),
+      });
+      const words: Record<PresidentAction["kind"], string> = {
+        APPROVE: "approved",
+        REJECT: "refused",
+        FLAG: "flagged for review",
+        QUERY: "asked for an explanation",
+        ESCALATE: "escalated to the executive board",
+        RESOLVE: "marked closed",
+        ATTEST: "signed off",
+        VERIFY: "verified",
+      };
+      notify(`${summaryText} ${words[kind]}`, kind === "REJECT" || kind === "ESCALATE" ? "danger" : "success", "Your decision and the reason are on the record. The bursary sees it immediately.");
+    },
+    approve(approval) {
+      update("expenseApprovals", approval.id, { status: "APPROVED", approvedBy: PRESIDENT_OFFICE });
+      create("presidentActions", {
+        kind: "APPROVE",
+        targetType: "expenseApproval",
+        targetId: approval.id,
+        summary: approval.description,
+        note: `Approved by the President's Office — ${approval.vendor}`,
+        amount: approval.amount,
+        at: new Date().toISOString(),
+      });
+      notify(`Approved ${naira(approval.amount)}`, "success", `${approval.description} · ${approval.vendor}. The bursary is cleared to pay, and the approval is on the record.`);
+    },
+    reject(approval, reason) {
+      update("expenseApprovals", approval.id, { status: "REJECTED", approvedBy: PRESIDENT_OFFICE, evidenceNote: `Refused: ${reason}` });
+      create("presidentActions", { kind: "REJECT", targetType: "expenseApproval", targetId: approval.id, summary: approval.description, note: reason, amount: approval.amount, at: new Date().toISOString() });
+      notify(`Refused ${naira(approval.amount)}`, "danger", `No payment will be made against ${approval.description}. Your reason is recorded and the requester is told.`);
+    },
+    query(target) {
+      create("concerns", {
+        channel: "PRESIDENT",
+        subject: `Explanation requested — ${target.summary}`,
+        body: "The President's Office has asked for a written explanation of this matter before it is accepted. Reply with the documents and the dates that support it.",
+        raisedBy: PRESIDENT_OFFICE,
+        raisedAt: new Date().toISOString(),
+        status: "OPEN",
+        anonymous: false,
+        amount: target.amount,
+        aboutType: "general",
+        aboutId: target.targetId,
+        response: null,
+      });
+      create("presidentActions", { kind: "QUERY", targetType: target.targetType, targetId: target.targetId, summary: target.summary, note: "Written explanation requested", amount: target.amount, at: new Date().toISOString() });
+      notify("Explanation requested", "info", `${target.who} has 24 hours to answer in writing. Until then the matter stays open on your board.`);
+    },
+    setConcernStatus(concern, status) {
+      update("concerns", concern.id, {
+        status,
+        response: status === "RESOLVED" ? concern.response ?? "Answered by the President's Office after review." : concern.response,
+      });
+      create("presidentActions", { kind: status === "RESOLVED" ? "RESOLVE" : "FLAG", targetType: "concern", targetId: concern.id, summary: concern.subject, note: status === "RESOLVED" ? "Closed with an answer" : "Investigation opened", amount: concern.amount, at: new Date().toISOString() });
+      notify(status === "RESOLVED" ? "Concern closed" : "Investigation opened", status === "RESOLVED" ? "success" : "info", concern.subject);
+    },
+  };
+
+  const tabs = [
+    { key: "command" as const, label: "Command centre" },
+    { key: "money" as const, label: "Money trail", count: summary.counts.CRITICAL },
+    { key: "integrity" as const, label: "Integrity & controls", count: summary.counts.HIGH },
+    { key: "approvals" as const, label: "Approvals", count: summary.awaitingHer },
+    { key: "oversight" as const, label: "Concerns & audit", count: summary.openConcerns },
+    { key: "decisions" as const, label: "Your decisions", count: data.presidentActions.length },
+  ];
+
   const topSpends = [...data.expenses].sort((a, b) => b.date.localeCompare(a.date) || b.amount - a.amount).slice(0, 7);
   const donut = brief.byCategory.slice(0, 5);
   const donutRest = brief.byCategory.slice(5).reduce((sum, item) => sum + item.value, 0);
@@ -244,7 +355,7 @@ export function PresidentWorkspace() {
         <div className="relative flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-2xl">
             <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-upwa-orange-400">
-              <Crown size={13} /> President&apos;s Office · read-only
+              <Crown size={13} /> President&apos;s Office · oversight &amp; approval
             </p>
             <h2 className="mt-3 font-display text-3xl font-bold leading-tight sm:text-4xl">
               {greeting}, Dr. Chike
@@ -256,7 +367,7 @@ export function PresidentWorkspace() {
             </p>
             <p className="mt-4 flex items-center gap-2 text-xs text-slate-400">
               <Lock size={13} className="text-upwa-orange-400" />
-              This office reads every record and changes none — registers, bursary and office updates are made by the school team.
+              This office reads every record and edits none — registers, receipts and payments are written by the school team. What you do here is decide: approve, refuse, question, escalate and close, and each decision is recorded against your name.
             </p>
           </div>
           <dl className="grid w-full max-w-sm grid-cols-1 gap-2.5">
@@ -275,6 +386,13 @@ export function PresidentWorkspace() {
           </dl>
         </div>
       </section>
+
+      {/* --------------------------------- tabs --------------------------------- */}
+      <TabBar tabs={tabs} active={tab} onChange={(key) => setTab(key as typeof tab)} />
+
+      {tab === "command" ? (
+        <>
+          <ControlHeadline summary={summary} />
 
       {/* --------------------------------- KPIs --------------------------------- */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -377,7 +495,7 @@ export function PresidentWorkspace() {
           <CardHeader title="The term's money story" subtitle="Everything the school billed, collected and spent since 8 September" icon={<Wallet size={18} />} />
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-4">
-              <Meter value={brief.collectionRate} tone="bg-gradient-to-r from-upwa-green-600 to-upwa-green-500" caption={`Of every ₦100 billed, ₦${brief.collectionRate} has been paid`} />
+              <Meter value={brief.collectionRate} tone="bg-gradient-to-r from-upwa-green-600 to-upwa-green-300" caption={`Of every ₦100 billed, ₦${brief.collectionRate} has been paid`} />
               <Meter value={brief.spendRate} tone="bg-gradient-to-r from-upwa-orange-600 to-upwa-orange-500" caption={`Spending so far equals ${brief.spendRate}% of the term's billing`} />
               <Meter value={brief.termAttendance} tone="bg-gradient-to-r from-upwa-blue-700 to-upwa-blue-500" caption={`Attendance across the term: ${brief.termAttendance}% (target ${settings.attendanceTarget}%)`} />
             </div>
@@ -491,7 +609,7 @@ export function PresidentWorkspace() {
           />
           <ul className="space-y-4">
             {[
-              { icon: CalendarCheck, tone: "border-upwa-green-500 bg-upwa-green-50 text-upwa-green-800", title: "Pupils & attendance", body: `${brief.present} pupils present, ${brief.late} late, ${brief.absent} absent and ${brief.excused} excused — ${brief.attendanceRate}% of the roll, against a term average of ${brief.termAttendance}%. ${brief.attendanceRate >= settings.attendanceTarget ? "Above the target you set." : `Below your ${settings.attendanceTarget}% target; class teachers have been asked to follow up.`}` },
+              { icon: CalendarCheck, tone: "border-upwa-green-600 bg-upwa-green-50 text-upwa-green-800", title: "Pupils & attendance", body: `${brief.present} pupils present, ${brief.late} late, ${brief.absent} absent and ${brief.excused} excused — ${brief.attendanceRate}% of the roll, against a term average of ${brief.termAttendance}%. ${brief.attendanceRate >= settings.attendanceTarget ? "Above the target you set." : `Below your ${settings.attendanceTarget}% target; class teachers have been asked to follow up.`}` },
               { icon: Wallet, tone: "border-upwa-blue-500 bg-upwa-blue-50 text-upwa-blue-800", title: "The bursary", body: `${naira(brief.paidToday.reduce((s, p) => s + p.amount, 0))} was banked from ${brief.paidToday.length} payment(s). ${brief.spentToday.length ? `${naira(brief.spentToday.reduce((s, e) => s + e.amount, 0))} went out: ${brief.spentToday.map((e) => e.description.toLowerCase()).join("; ")}.` : "Nothing was spent."} ${brief.pending.length} transfer(s) are still awaiting confirmation.` },
               { icon: Inbox, tone: "border-upwa-orange-500 bg-upwa-orange-50 text-upwa-orange-800", title: "Admissions", body: `${brief.thisWeek.applications} new application(s) this week. ${data.applications.filter((a) => a.status === "OFFER_MADE").length} family(ies) are holding offers, and ${data.applications.filter((a) => a.status === "ENROLLED").length} applicant(s) have already become pupils.` },
               { icon: School, tone: "border-violet-500 bg-violet-50 text-violet-800", title: "Classroom", body: `${brief.marksOnFile} marks are on file across ${brief.subjects} subjects this term, and report cards are ready to print for any class. ${brief.thisWeek.registers} class register(s) have been closed this week.` },
@@ -554,7 +672,7 @@ export function PresidentWorkspace() {
                 </div>
               </div>
               <div className="mt-4 space-y-3">
-                <Meter value={department.rate} tone="bg-upwa-green-500" caption="In school today" />
+                <Meter value={department.rate} tone="bg-upwa-green-600" caption="In school today" />
                 <Meter value={department.feesRate} tone="bg-upwa-blue-600" caption="Of their fees paid" />
               </div>
               <p className="mt-3 text-[11px] leading-5 text-slate-600">
@@ -661,8 +779,8 @@ export function PresidentWorkspace() {
             <div className="lg:col-span-2">
               <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">Delivery log · {settings.presidentEmail}</p>
               <ul className="space-y-2.5">
-                {[...brief.log].reverse().slice(0, 5).map((entry) => (
-                  <li key={`${entry.kind}-${entry.at}`} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2.5">
+                {[...brief.log].reverse().slice(0, 5).map((entry, index) => (
+                  <li key={`${entry.kind}-${entry.at}-${index}`} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2.5">
                     {entry.state === "delivered" ? (
                       <CheckCircle2 size={15} className="shrink-0 text-upwa-green-300" />
                     ) : (
@@ -702,10 +820,37 @@ export function PresidentWorkspace() {
 
       <p className="px-1 text-[11px] leading-5 text-slate-500">
         Every figure above is drawn live from the school&apos;s own registers, bursary ledger and office records for {settings.session},{" "}
-        {termLabel(settings.currentTerm)}. Nothing on this page can be edited — when the school team updates a register, confirms a transfer or logs an
+        {termLabel(settings.currentTerm)}. No record here can be edited — when the school team updates a register, confirms a transfer or logs an
         application, this brief rewrites itself. The two PDFs are mailed on their own schedule by the school&apos;s report service — the buttons above send
         the copy you are looking at, whenever you ask for it.
       </p>
+        </>
+      ) : null}
+
+      {tab === "money" ? (
+        <MoneyTrailView data={data} summary={summary} recon={recon} actions={controlActions} />
+      ) : null}
+
+      {tab === "integrity" ? <IntegrityView data={data} summary={summary} actions={controlActions} /> : null}
+
+      {tab === "approvals" ? <ApprovalsView data={data} summary={summary} actions={controlActions} /> : null}
+
+      {tab === "oversight" ? <OversightView data={data} actions={controlActions} /> : null}
+
+      {tab === "decisions" ? (
+        <div className="space-y-5">
+          <DecisionTrail data={data} />
+          <Card className="border-dashed bg-upwa-ivory">
+            <p className="text-[12px] leading-6 text-slate-600">
+              <span className="font-bold text-upwa-navy">Why this page exists. </span>
+              You cannot edit a ledger entry, a receipt or a payment from this office, and that is deliberate. If the President could
+              quietly change a figure, nobody downstream could tell a correction from a cover-up. What you can do is approve, refuse,
+              question, flag, escalate and close — and every one of those decisions is written here with the time and the reason. When
+              the bursary&apos;s trail and your trail are both complete, there is nowhere for money to disappear.
+            </p>
+          </Card>
+        </div>
+      ) : null}
     </div>
   );
 }

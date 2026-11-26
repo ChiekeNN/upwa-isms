@@ -49,7 +49,7 @@ import {
 } from "../format";
 
 const STATUSES: { value: AttendanceStatus; label: string; short: string; active: string; idle: string }[] = [
-  { value: "PRESENT", label: "Present", short: "P", active: "bg-upwa-green-600 text-white border-upwa-green-600", idle: "border-slate-300 text-slate-600 hover:border-upwa-green-400 hover:bg-upwa-green-50" },
+  { value: "PRESENT", label: "Present", short: "P", active: "bg-upwa-green-600 text-white border-upwa-green-600", idle: "border-slate-300 text-slate-600 hover:border-upwa-green-300 hover:bg-upwa-green-50" },
   { value: "LATE", label: "Late", short: "L", active: "bg-upwa-orange-500 text-white border-upwa-orange-500", idle: "border-slate-300 text-slate-600 hover:border-upwa-orange-400 hover:bg-upwa-orange-50" },
   { value: "ABSENT", label: "Absent", short: "A", active: "bg-rose-600 text-white border-rose-600", idle: "border-slate-300 text-slate-600 hover:border-rose-400 hover:bg-rose-50" },
   { value: "EXCUSED", label: "Excused", short: "E", active: "bg-violet-600 text-white border-violet-600", idle: "border-slate-300 text-slate-600 hover:border-violet-400 hover:bg-violet-50" },
