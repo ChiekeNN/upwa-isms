@@ -655,7 +655,7 @@ export function ToastStack({
   };
 
   return (
-    <div className="pointer-events-none fixed bottom-5 right-5 z-[90] flex w-[min(23rem,calc(100vw-2.5rem))] flex-col gap-2.5">
+    <div className="pointer-events-none fixed bottom-5 right-5 z-[90] flex w-[min(23rem,calc(100vw_-_2.5rem))] flex-col gap-2.5">
       {toasts.map((toast) => (
         <div
           key={toast.id}

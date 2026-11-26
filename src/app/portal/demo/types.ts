@@ -291,6 +291,148 @@ export type Expense = {
   approvedBy: string;
 };
 
+/* ------------------------- integrity and control layer ------------------------- */
+
+/**
+ * Evidence that does not originate with the bursary's own ledger. A payment can
+ * only be hidden if the record of it lives in one place, so every control below
+ * compares the ledger against a source nobody in the bursary can rewrite.
+ */
+
+/** A line from the bank's own feed: money that actually reached the school. */
+export type BankCredit = {
+  id: string;
+  date: string;
+  amount: number;
+  channel: PaymentMethod | "CASH_DEPOSIT" | "POS";
+  payerName: string;
+  reference: string;
+  bank: string;
+  /** The ledger receipt this credit maps to, once matched. */
+  matchedPaymentId: string | null;
+  matchedReceiptNumber: string | null;
+  status: "MATCHED" | "UNMATCHED" | "PART_MATCHED";
+  studentId: string | null;
+  note: string;
+};
+
+/**
+ * The receipt the platform sent the parent automatically at the moment of
+ * payment. This is the control that catches hidden income: the parent holds
+ * proof the bursary never had to issue, so a payment the parent acknowledges
+ * but the ledger does not show is visible the same day.
+ */
+export type ParentConfirmation = {
+  id: string;
+  receiptReference: string;
+  studentId: string;
+  parentName: string;
+  guardianPhone: string;
+  amount: number;
+  method: PaymentMethod;
+  paidOn: string;
+  channel: "SMS" | "EMAIL" | "WHATSAPP";
+  sentAt: string;
+  delivered: boolean;
+  acknowledgedAt: string | null;
+  ledgerPaymentId: string | null;
+  status: "MATCHED" | "NOT_IN_LEDGER";
+};
+
+/** The approval trail behind an expense: who asked, who allowed it, what proof exists. */
+export type ExpenseApproval = {
+  id: string;
+  expenseId: string | null;
+  date: string;
+  description: string;
+  vendor: string;
+  category: ExpenseCategory;
+  amount: number;
+  requestedBy: string;
+  approvedBy: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "PAID_WITHOUT_APPROVAL";
+  /** True when an invoice, receipt or quote is attached to the payment. */
+  evidence: boolean;
+  evidenceNote: string;
+  paidAt: string | null;
+  invoiceRef: string | null;
+};
+
+/** A signed daily declaration that the day's money is fully recorded. */
+export type Attestation = {
+  id: string;
+  date: string;
+  role: "BURSAR" | "HEAD_TEACHER";
+  signedBy: string;
+  status: "SIGNED" | "OVERDUE" | "VARIANCE";
+  signedAt: string | null;
+  cashDeclared: number;
+  bankDeclared: number;
+  ledgerTotal: number;
+  variance: number;
+  note: string;
+};
+
+/** Immutable log of what staff did to the records, including edits and removals. */
+export type AuditEntry = {
+  id: string;
+  at: string;
+  actor: string;
+  action: string;
+  targetType: "payment" | "expense" | "invoice" | "receipt book" | "staff" | "vendor" | "settings" | "waiver";
+  targetId: string;
+  detail: string;
+  severity: "INFO" | "WATCH" | "ALERT";
+  amount: number | null;
+};
+
+/** A concern raised through the confidential line, by a parent, or by staff. */
+export type Concern = {
+  id: string;
+  raisedAt: string;
+  channel: "CONFIDENTIAL_LINE" | "PARENT" | "STAFF" | "AUDIT" | "PRESIDENT";
+  raisedBy: string;
+  anonymous: boolean;
+  subject: string;
+  body: string;
+  aboutType: AuditEntry["targetType"] | "general";
+  aboutId: string | null;
+  amount: number | null;
+  status: "OPEN" | "INVESTIGATING" | "RESOLVED";
+  response: string | null;
+};
+
+/** A decision the President took from her own office. She directs; she never edits records. */
+export type PresidentAction = {
+  id: string;
+  at: string;
+  kind: "APPROVE" | "REJECT" | "FLAG" | "QUERY" | "ESCALATE" | "RESOLVE" | "ATTEST" | "VERIFY";
+  targetType: string;
+  targetId: string;
+  summary: string;
+  note: string;
+  amount: number | null;
+};
+
+/** What each spending area is allowed to cost this term. */
+export type CategoryBudget = {
+  id: string;
+  category: ExpenseCategory;
+  allocated: number;
+  approvedBy: string;
+};
+
+/** Receipt book stock — sequential numbers, so a torn-out receipt leaves a visible gap. */
+export type ReceiptBook = {
+  id: string;
+  label: string;
+  heldBy: string;
+  firstNumber: number;
+  lastNumber: number;
+  used: number[];
+  voided: { number: number; reason: string; approvedBy: string | null }[];
+};
+
 export type DemoData = {
   students: Student[];
   guardians: Guardian[];
@@ -304,6 +446,15 @@ export type DemoData = {
   events: SchoolEvent[];
   messages: Message[];
   expenses: Expense[];
+  bankCredits: BankCredit[];
+  parentConfirmations: ParentConfirmation[];
+  expenseApprovals: ExpenseApproval[];
+  attestations: Attestation[];
+  auditLog: AuditEntry[];
+  concerns: Concern[];
+  presidentActions: PresidentAction[];
+  budgets: CategoryBudget[];
+  receiptBooks: ReceiptBook[];
   settings: DemoSettings;
 };
 
