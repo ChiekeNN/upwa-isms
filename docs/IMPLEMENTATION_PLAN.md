@@ -297,3 +297,13 @@ Do not treat features that depend on those migrations as production-ready. Befor
 Proceed in this order: (1) test/document authentication and RBAC boundaries, (2) deliver authorised admin screens for education levels and sessions/terms, (3) add classes/arms/subject assignments, (4) finish member creation/import and guardian linking, then (5) wire those configurations into attendance, grading, and score workflows. This creates a usable administrative foundation without introducing fictional school records or bypassing portal security.
 
 The reference page at `nersapp.africa/features` could not be inspected from this workspace. The feature requirements in this plan remain the functional source of truth; visual matching should use screenshots or a visual capture supplied by UPWA, while preserving UPWA branding and portal authorization.
+
+## 10. Progressive Web App
+
+The public site and the portal install as an app on phones, tablets and desktops, and keep working when the network drops — the families and staff this platform serves often reach it from patchy connections.
+
+- **Manifest** — `src/app/manifest.ts` serves `/manifest.webmanifest`: standalone display, UPWA navy theme and splash colours, the crest as 192/512 icons plus a maskable variant, and long-press shortcuts to the President's Office and Admissions.
+- **Icons** — generated from `public/upwa-logo.png` onto the brand navy in `public/icons/` (16–512, maskable 512, Apple touch 180, `.ico` for legacy clients). The cast shadow in the source artwork is stripped first so it does not read as a smudge at icon sizes.
+- **Service worker** — `public/sw.js`, registered by `src/components/pwa-install.tsx` in production builds only. Navigations are network-first with the last good copy and `/offline` behind them; `/_next/static/**` is cache-first because those files are content-hashed; GET `/api/**` is network-first with the last-known answer kept for offline; imagery and fonts are served from the device and refreshed behind the response. Nothing else is intercepted — no cross-origin requests and no POSTs, so forms, uploads and the President's dispatch route always reach the server.
+- **Offline page** — `src/app/offline` explains that opened pages still work and offers a retry.
+- **Install affordance** — a dismissible card appears when the browser fires `beforeinstallprompt`, with an iOS "Add to Home Screen" hint where that event never fires, and a reload prompt when a new service worker takes over.
